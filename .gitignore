@@ -16,3 +16,7 @@ venv/
 Dataset/
 output/
 catboost_info/
+
+# Databases
+backend/app.db
+*.db

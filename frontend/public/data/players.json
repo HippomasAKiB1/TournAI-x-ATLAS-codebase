@@ -589,8 +589,8 @@
       "squad_size": 21,
       "top5_avg": 82.06,
       "depth": 28.62,
-      "current_elo": 1633.59,
-      "form_10": 0.4905
+      "current_elo": 1586.82,
+      "form_10": 0.2897
     },
     {
       "team": "Portugal",
@@ -869,8 +869,8 @@
       "squad_size": 20,
       "top5_avg": 61.74,
       "depth": 25.78,
-      "current_elo": 1887.54,
-      "form_10": 0.7456
+      "current_elo": 1934.31,
+      "form_10": 0.8497
     },
     {
       "team": "Albania",

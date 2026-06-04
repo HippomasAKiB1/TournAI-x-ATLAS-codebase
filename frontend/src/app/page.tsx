@@ -197,6 +197,30 @@ export default function Home() {
           })}
         </nav>
 
+        {/* Divider */}
+        <div className="h-px bg-zinc-800/80 my-2 mx-4"></div>
+
+        {/* Fan Prediction Link */}
+        <div className="px-4 py-1.5">
+          <button
+            onClick={() => {
+              const token = localStorage.getItem("token");
+              if (token) {
+                window.location.href = "/competition";
+              } else {
+                window.location.href = "/auth";
+              }
+            }}
+            className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 bg-gradient-to-r from-purple-900/30 to-cyan-900/30 hover:from-purple-900/50 hover:to-cyan-900/50 border border-cyan-500/20 hover:border-cyan-400/40 text-cyan-300 shadow-md shadow-cyan-500/5 cursor-pointer group"
+          >
+            <div className="flex items-center gap-3">
+              <Trophy className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+              <span>Fan Prediction League</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+
         {/* Sidebar Footer */}
         <div className="p-5 border-t border-zinc-800/80 bg-zinc-950/40">
           <div className="flex items-center gap-3 p-3 rounded-lg bg-zinc-900/50 border border-zinc-800">

@@ -131,7 +131,7 @@ class ATLASModelTrainer:
         for name, model in self.models.items():
             safe_name = name.lower().replace(' ', '_')
             joblib.dump(model, out_dir / f"{safe_name}.pkl")
-        print(f"  ✓ Saved {len(self.models)} models to {out_dir}")
+        print(f"  [OK] Saved {len(self.models)} models to {out_dir}")
         
     def load_models(self, in_dir: Path):
         """Deserialize and load saved models from the specified directory."""
@@ -140,5 +140,5 @@ class ATLASModelTrainer:
             path = Path(in_dir) / f"{safe_name}.pkl"
             if path.exists():
                 self.models[name] = joblib.load(path)
-        print(f"  ✓ Loaded available models from {in_dir}")
+        print(f"  [OK] Loaded available models from {in_dir}")
         return self
