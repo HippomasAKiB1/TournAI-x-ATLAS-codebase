@@ -15,10 +15,12 @@ class ATLASMonteCarloSimulator:
             'group_exit': 0, 'r32': 0, 'r16': 0,
             'qf': 0, 'sf': 0, 'final': 0, 'champion': 0
         })
+        self.team_positions = defaultdict(lambda: [0, 0, 0, 0])
         
     def run_simulations(self, n_simulations: int = 10000, show_progress: bool = True) -> pd.DataFrame:
         """Run N simulations of the entire tournament structure and aggregate probabilities."""
         self.team_stages.clear()
+        self.team_positions.clear()
         
         iterator = range(n_simulations)
         if show_progress:
@@ -40,6 +42,7 @@ class ATLASMonteCarloSimulator:
                 
                 # Top 2 advance directly
                 for pos, (team, stats) in enumerate(standings_sim):
+                    self.team_positions[team][pos] += 1
                     if pos < 2:
                         group_results.setdefault(label, []).append(team)
                         self.team_stages[team]['r32'] += 1
@@ -124,5 +127,16 @@ class ATLASMonteCarloSimulator:
                 'Round of 32 %': round(stages['r32'] / n_simulations * 100.0, 2),
                 'Group Exit %': round(stages['group_exit'] / n_simulations * 100.0, 2),
             })
+            
+        # --- Compute group qualification percentages ---
+        self.team_positions_pct = {}
+        for team in self.all_teams:
+            pos_counts = self.team_positions[team]
+            self.team_positions_pct[team] = {
+                'first_place': round(pos_counts[0] / n_simulations * 100.0, 2),
+                'second_place': round(pos_counts[1] / n_simulations * 100.0, 2),
+                'third_place': round(pos_counts[2] / n_simulations * 100.0, 2),
+                'fourth_place': round(pos_counts[3] / n_simulations * 100.0, 2)
+            }
             
         return pd.DataFrame(sim_results).sort_values('Champion %', ascending=False)

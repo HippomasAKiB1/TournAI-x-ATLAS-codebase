@@ -1,6 +1,7 @@
 import os
 import json
 import sys
+import math
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import timedelta
@@ -104,13 +105,121 @@ def load_sanitized_json(filename: str) -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse {filename}: {str(e)}")
 
+# Pipeline Status Tracking State
+PIPELINE_STATUS = {
+    "status": "idle",
+    "last_run_time": None,
+    "error": None
+}
+
+def calculate_poisson_score(elo_diff: float, avg_diff: float) -> tuple[int, int, float]:
+    """Dynamically compute lambda goals parameter and find the highest joint probability score line."""
+    # Base goals is 1.35. Elo difference and Average Squad Impact difference adjusts expected goals
+    lambda_home = 1.35 + (elo_diff / 500.0) + (avg_diff / 15.0)
+    lambda_away = 1.35 - (elo_diff / 500.0) - (avg_diff / 15.0)
+    
+    # Cap parameters between 0.3 and 5.0
+    lambda_home = max(0.3, min(5.0, lambda_home))
+    lambda_away = max(0.3, min(5.0, lambda_away))
+    
+    best_prob = -1.0
+    best_score = (0, 0)
+    
+    # Iterate from 0 to 5 goals
+    for gh in range(6):
+        prob_h = (lambda_home ** gh) * math.exp(-lambda_home) / math.factorial(gh)
+        for ga in range(6):
+            prob_a = (lambda_away ** ga) * math.exp(-lambda_away) / math.factorial(ga)
+            joint_prob = prob_h * prob_a
+            if joint_prob > best_prob:
+                best_prob = joint_prob
+                best_score = (gh, ga)
+                
+    return best_score[0], best_score[1], round(best_prob, 4)
+
+def calculate_entropy_confidence(p_home: float, p_draw: float, p_away: float) -> float:
+    """Calculate the normalized Shannon entropy confidence of the match outcome distribution."""
+    total = p_home + p_draw + p_away
+    if total <= 0.0:
+        return 0.3333
+    p1 = p_home / total
+    p2 = p_draw / total
+    p3 = p_away / total
+    
+    entropy = 0.0
+    for p in [p1, p2, p3]:
+        if p > 0.0:
+            entropy -= p * math.log2(p)
+            
+    # Max entropy for a 3-outcome problem is log2(3) = 1.5849625
+    max_entropy = math.log2(3.0)
+    confidence = 1.0 - (entropy / max_entropy)
+    return round(max(0.0, min(1.0, confidence)), 4)
+
 # ============================================================================
 # 1. CORE ATLAS ML DATA ENDPOINTS
 # ============================================================================
 
 @app.get("/api/predictions")
 async def get_predictions():
-    return load_sanitized_json("predictions.json")
+    data = load_sanitized_json("predictions.json")
+    predictions_list = data.get("predictions", [])
+    
+    # Load player/squad data to look up ELO and squad impact averages
+    players_data = load_sanitized_json("players.json")
+    team_strengths = players_data.get("team_strength", [])
+    team_strength_map = {t["team"].lower(): t for t in team_strengths}
+    
+    enriched_predictions = []
+    for pred in predictions_list:
+        home_team = pred.get("home_team", "")
+        away_team = pred.get("away_team", "")
+        
+        home_str = team_strength_map.get(home_team.lower())
+        away_str = team_strength_map.get(away_team.lower())
+        
+        elo_home = home_str.get("current_elo") if home_str else 1600.0
+        elo_away = away_str.get("current_elo") if away_str else 1600.0
+        # If elo is None, fallback to 1600
+        if elo_home is None: elo_home = 1600.0
+        if elo_away is None: elo_away = 1600.0
+        elo_diff = elo_home - elo_away
+        
+        avg_home = home_str.get("avg_impact") if home_str else 50.0
+        avg_away = away_str.get("avg_impact") if away_str else 50.0
+        if avg_home is None: avg_home = 50.0
+        if avg_away is None: avg_away = 50.0
+        avg_diff = avg_home - avg_away
+        
+        # Calculate Poisson score prediction
+        predicted_home_goals, predicted_away_goals, poisson_joint_prob = calculate_poisson_score(elo_diff, avg_diff)
+        
+        # Calculate confidence from the ensemble win/draw/loss probabilities
+        p_home = pred.get("ensemble_home_win") or pred.get("home_win_prob") or 0.33
+        p_draw = pred.get("ensemble_draw") or pred.get("draw_prob") or 0.33
+        p_away = pred.get("ensemble_away_win") or pred.get("away_win_prob") or 0.33
+        
+        confidence = calculate_entropy_confidence(p_home, p_draw, p_away)
+        
+        # Check for upset alert (if lower-Elo team has > 30% win probability)
+        is_upset = False
+        if elo_diff > 0 and p_away > 0.30:
+            is_upset = True
+        elif elo_diff < 0 and p_home > 0.30:
+            is_upset = True
+            
+        enriched_pred = {
+            **pred,
+            "predicted_home_goals": predicted_home_goals,
+            "predicted_away_goals": predicted_away_goals,
+            "poisson_joint_prob": poisson_joint_prob,
+            "confidence": confidence,
+            "upset_alert": is_upset
+        }
+        enriched_predictions.append(enriched_pred)
+        
+    data["predictions"] = enriched_predictions
+    return data
 
 @app.get("/api/simulations")
 async def get_simulations():
@@ -155,7 +264,8 @@ async def predict_custom_match(payload: PredictPayload):
     elo_diff = elo_home - elo_away
     
     avg_home = home_str.get("avg_impact") or 50.0
-    avg_away = away_str.get("avg_impact") or 50.0
+    away_avg_val = away_str.get("avg_impact")
+    avg_away = away_avg_val if away_avg_val is not None else 50.0
     avg_diff = avg_home - avg_away
     
     # Adjusted Elo difference based on squad impact averages
@@ -181,6 +291,19 @@ async def predict_custom_match(payload: PredictPayload):
         predicted_result = "Home Win"
     elif away_win_prob > home_win_prob and away_win_prob > draw_prob_final:
         predicted_result = "Away Win"
+        
+    # Calculate Poisson scoreline
+    predicted_home_goals, predicted_away_goals = calculate_poisson_score(elo_diff, avg_diff)
+    
+    # Calculate normalized entropy confidence
+    confidence = calculate_entropy_confidence(home_win_prob, draw_prob_final, away_win_prob)
+    
+    # Upset Alert
+    is_upset = False
+    if elo_diff > 0 and away_win_prob > 0.30:
+        is_upset = True
+    elif elo_diff < 0 and home_win_prob > 0.30:
+        is_upset = True
       
     # Generate custom explanations
     elo_diff_narrative = (
@@ -207,10 +330,39 @@ async def predict_custom_match(payload: PredictPayload):
         "away_win_prob": away_win_prob,
         "draw_prob": draw_prob_final,
         "predicted_result": predicted_result,
-        "confidence": max(home_win_prob, away_win_prob, draw_prob_final),
+        "predicted_home_goals": predicted_home_goals,
+        "predicted_away_goals": predicted_away_goals,
+        "confidence": confidence,
         "elo_diff": elo_diff,
+        "upset_alert": is_upset,
         "reasons": [squad_quality_narrative, elo_diff_narrative, form_narrative]
     }
+
+def run_pipeline_in_background(
+    home_team: str,
+    away_team: str,
+    home_score: int,
+    away_score: int,
+    stage: str
+):
+    global PIPELINE_STATUS
+    PIPELINE_STATUS["status"] = "running"
+    try:
+        from datetime import datetime
+        trigger_adaptive_update(
+            home_team=home_team,
+            away_team=away_team,
+            home_score=home_score,
+            away_score=away_score,
+            stage=stage
+        )
+        PIPELINE_STATUS["status"] = "idle"
+        PIPELINE_STATUS["last_run_time"] = datetime.now().isoformat()
+        PIPELINE_STATUS["error"] = None
+    except Exception as e:
+        PIPELINE_STATUS["status"] = "idle"
+        PIPELINE_STATUS["error"] = str(e)
+        print(f"Error in background pipeline: {e}")
 
 # ============================================================================
 # 2. ADAPTIVE INGESTION ENDPOINT
@@ -282,7 +434,7 @@ async def ingest_match(
         )
     else:
         background_tasks.add_task(
-            trigger_adaptive_update,
+            run_pipeline_in_background,
             payload.home_team,
             payload.away_team,
             payload.home_score,
@@ -294,6 +446,25 @@ async def ingest_match(
         "status": "update_queued",
         "message": f"Adaptive learning and tournament re-simulation triggered in the background for {payload.home_team} vs {payload.away_team}."
     }
+
+@app.get("/api/pipeline/status")
+async def get_pipeline_status():
+    """Retrieve the status and last completion time of the adaptive pipeline."""
+    return PIPELINE_STATUS
+
+@app.get("/api/latest_shift")
+async def get_latest_shift():
+    """Safe retrieval of the latest tournament shift narrative to avoid frontend 404 errors."""
+    file_path = FRONTEND_DATA_DIR / "latest_shift.json"
+    if not file_path.exists():
+        return {
+            "shift_narrative": "No matches have been ingested yet. All 72 group stage matches are currently simulated baselines. Use the Live Ingestion Control panel below to ingest actual scores and see real-time probability shifts!"
+        }
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        return {"shift_narrative": f"Error loading narrative: {str(e)}"}
 
 # ============================================================================
 # 3. USER AUTHENTICATION ENDPOINTS
@@ -356,3 +527,142 @@ def get_leaderboard(db: Session = Depends(get_db)):
 def get_db_matches(db: Session = Depends(get_db)):
     """Retrieve all match fixtures from the database ordered by fixture ID."""
     return db.query(Match).order_by(Match.id).all()
+
+class WhatIfPayload(BaseModel):
+    team: str
+    strength_drop_pct: float
+    player_name: Optional[str] = None
+
+@app.get("/api/tracker/bracket")
+async def get_bracket_probabilities():
+    """Retrieve advancement probabilities for all slots in the knockout bracket."""
+    return load_sanitized_json("bracket.json")
+
+@app.get("/api/tracker/qualification")
+async def get_qualification_probabilities():
+    """Retrieve group qualification probabilities for each team."""
+    return load_sanitized_json("qualification.json")
+
+@app.post("/api/simulate/whatif")
+async def simulate_whatif(payload: WhatIfPayload):
+    """
+    Run a fast 1,000 Monte Carlo simulation run after adjusting a team's strength 
+    due to an injury or scenario, returning the before-and-after probabilities.
+    """
+    try:
+        # Load baseline simulations
+        base_sim = load_sanitized_json("simulations.json")
+        base_results = base_sim.get("results", [])
+        
+        # Load predictions and standings
+        predictions_data = load_sanitized_json("predictions.json")
+        fixtures_list = predictions_data.get("predictions", [])
+        
+        # Load team ELOs
+        players_data = load_sanitized_json("players.json")
+        team_strengths = players_data.get("team_strength", [])
+        team_elos = {t["team"]: (t["current_elo"] or 1600.0) for t in team_strengths}
+        
+        # Reconstruct groups
+        groups = {}
+        standings_data = load_sanitized_json("group_standings.json")
+        for group_name, teams in standings_data.items():
+            groups[group_name.replace("Group ", "")] = [t["Team"] for t in teams]
+            
+        all_teams = []
+        for g_teams in groups.values():
+            all_teams.extend(g_teams)
+        all_teams = sorted(list(set(all_teams)))
+        
+        # Build fixture probs lookup and adjust them for the injured team
+        fixture_probs_lookup = {}
+        adj_factor = 1.0 - (payload.strength_drop_pct / 100.0)
+        adj_factor = max(0.5, min(1.0, adj_factor))
+        
+        for pred in fixtures_list:
+            home = pred["home_team"]
+            away = pred["away_team"]
+            p_away = pred.get("ensemble_away_win") or pred.get("away_win_prob") or 0.33
+            p_draw = pred.get("ensemble_draw") or pred.get("draw_prob") or 0.33
+            p_home = pred.get("ensemble_home_win") or pred.get("home_win_prob") or 0.33
+            
+            # If home is the injured team, reduce home win probability
+            if home.lower() == payload.team.lower():
+                diff = p_home * (1.0 - adj_factor)
+                p_home = p_home * adj_factor
+                p_away = p_away + diff * 0.7
+                p_draw = p_draw + diff * 0.3
+            # If away is the injured team, reduce away win probability
+            elif away.lower() == payload.team.lower():
+                diff = p_away * (1.0 - adj_factor)
+                p_away = p_away * adj_factor
+                p_home = p_home + diff * 0.7
+                p_draw = p_draw + diff * 0.3
+                
+            # Normalize probabilities
+            tot = p_home + p_draw + p_away
+            if tot > 0:
+                p_home /= tot
+                p_draw /= tot
+                p_away /= tot
+                
+            fixture_probs_lookup[(home, away)] = [p_away, p_draw, p_home]
+            
+        # Reconstruct ELOs, adjust for injured team
+        if payload.team in team_elos:
+            team_elos[payload.team] *= adj_factor
+            
+        # Run 1,000 simulations
+        from src.simulation.monte_carlo import ATLASMonteCarloSimulator
+        simulator = ATLASMonteCarloSimulator(groups, fixture_probs_lookup, team_elos, all_teams)
+        df_sim = simulator.run_simulations(n_simulations=1000, show_progress=False)
+        
+        # Format results
+        results_list = df_sim.to_dict('records')
+        
+        # Compare before and after for the target team
+        base_target = next((t for t in base_results if t["Team"].lower() == payload.team.lower()), None)
+        new_target = next((t for t in results_list if t["Team"].lower() == payload.team.lower()), None)
+        
+        comparison = {}
+        if base_target and new_target:
+            before_r16 = base_target.get("Round of 16 %", 0.0)
+            after_r16 = new_target.get("Round of 16 %", 0.0)
+            before_champ = base_target.get("Champion %", 0.0)
+            after_champ = new_target.get("Champion %", 0.0)
+            
+            player = payload.player_name or "Key player"
+            narrative = (
+                f"{player}'s absence reduces {payload.team}'s squad strength by {payload.strength_drop_pct:.1f}%. "
+                f"As a result, their probability of reaching the Round of 16 drops from {before_r16:.1f}% to {after_r16:.1f}%, "
+                f"and their overall title chances fall from {before_champ:.1f}% to {after_champ:.1f}%."
+            )
+            
+            comparison = {
+                "team": payload.team,
+                "strength_drop_pct": payload.strength_drop_pct,
+                "player_name": payload.player_name,
+                "before": {
+                    "champion": before_champ,
+                    "finalist": base_target.get("Finalist %", 0.0),
+                    "semi_final": base_target.get("Semi-Final %", 0.0),
+                    "quarter_final": base_target.get("Quarter-Final %", 0.0),
+                    "r16": before_r16
+                },
+                "after": {
+                    "champion": after_champ,
+                    "finalist": new_target.get("Finalist %", 0.0),
+                    "semi_final": new_target.get("Semi-Final %", 0.0),
+                    "quarter_final": new_target.get("Quarter-Final %", 0.0),
+                    "r16": after_r16
+                },
+                "narrative": narrative
+            }
+            
+        return {
+            "status": "success",
+            "comparison": comparison,
+            "results": results_list[:12]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Simulation error: {str(e)}")

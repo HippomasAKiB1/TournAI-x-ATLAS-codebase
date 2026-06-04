@@ -12,18 +12,26 @@ class ATLASShapExplainer:
         self.shap_model = best_model
         
         # Fall back to best tree-based model if primary model is an ensemble/neural net
-        tree_based_classes = ['XGBoost', 'LightGBM', 'CatBoost', 'Random Forest', 'Gradient Boosting']
+        # Exclude 'Gradient Boosting' because scikit-learn's multi-class GBDT is not supported by TreeExplainer
+        tree_based_classes = ['XGBoost', 'LightGBM', 'CatBoost', 'Random Forest']
         if self.shap_model_name not in tree_based_classes:
-            best_tree_acc = -1.0
             for name in tree_based_classes:
                 if name in models_dict:
-                    # We can't access accuracy directly unless we pass it, so let's check if we have results
-                    # Or we can just use the first available tree model as a fallback (usually XGBoost/LightGBM)
                     self.shap_model_name = name
                     self.shap_model = models_dict[name]
                     break
                     
-        self.explainer = shap.TreeExplainer(self.shap_model)
+        try:
+            self.explainer = shap.TreeExplainer(self.shap_model)
+        except Exception as e:
+            # Fallback to XGBoost if primary explainer fails
+            fallback_name = 'XGBoost'
+            if fallback_name in models_dict:
+                self.shap_model_name = fallback_name
+                self.shap_model = models_dict[fallback_name]
+                self.explainer = shap.TreeExplainer(self.shap_model)
+            else:
+                raise e
         
     def compute_shap_values(self, X_test) -> np.ndarray:
         """Compute SHAP values for a given test set."""

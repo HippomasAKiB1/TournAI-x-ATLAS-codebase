@@ -1,0 +1,290 @@
+{
+  "Algeria": {
+    "first_place": 4.87,
+    "second_place": 33.27,
+    "third_place": 44.2,
+    "fourth_place": 17.66
+  },
+  "Argentina": {
+    "first_place": 82.71,
+    "second_place": 12.6,
+    "third_place": 3.96,
+    "fourth_place": 0.73
+  },
+  "Australia": {
+    "first_place": 4.74,
+    "second_place": 12.5,
+    "third_place": 26.68,
+    "fourth_place": 56.08
+  },
+  "Austria": {
+    "first_place": 8.87,
+    "second_place": 37.98,
+    "third_place": 27.87,
+    "fourth_place": 25.28
+  },
+  "Belgium": {
+    "first_place": 85.83,
+    "second_place": 10.08,
+    "third_place": 3.14,
+    "fourth_place": 0.95
+  },
+  "Bosnia and Herzegovina": {
+    "first_place": 0.42,
+    "second_place": 3.72,
+    "third_place": 31.92,
+    "fourth_place": 63.94
+  },
+  "Brazil": {
+    "first_place": 70.86,
+    "second_place": 19.65,
+    "third_place": 7.16,
+    "fourth_place": 2.33
+  },
+  "Canada": {
+    "first_place": 28.47,
+    "second_place": 62.51,
+    "third_place": 7.36,
+    "fourth_place": 1.66
+  },
+  "Cape Verde": {
+    "first_place": 3.19,
+    "second_place": 14.88,
+    "third_place": 29.52,
+    "fourth_place": 52.41
+  },
+  "Colombia": {
+    "first_place": 42.78,
+    "second_place": 34.44,
+    "third_place": 14.88,
+    "fourth_place": 7.9
+  },
+  "Croatia": {
+    "first_place": 14.6,
+    "second_place": 43.55,
+    "third_place": 30.17,
+    "fourth_place": 11.68
+  },
+  "Curaçao": {
+    "first_place": 3.7,
+    "second_place": 12.63,
+    "third_place": 24.22,
+    "fourth_place": 59.45
+  },
+  "Czech Republic": {
+    "first_place": 1.46,
+    "second_place": 15.47,
+    "third_place": 30.15,
+    "fourth_place": 52.92
+  },
+  "DR Congo": {
+    "first_place": 9.18,
+    "second_place": 18.23,
+    "third_place": 34.4,
+    "fourth_place": 38.19
+  },
+  "Ecuador": {
+    "first_place": 15.32,
+    "second_place": 39.19,
+    "third_place": 31.15,
+    "fourth_place": 14.34
+  },
+  "Egypt": {
+    "first_place": 4.57,
+    "second_place": 31.74,
+    "third_place": 44.11,
+    "fourth_place": 19.58
+  },
+  "England": {
+    "first_place": 77.17,
+    "second_place": 16.65,
+    "third_place": 5.06,
+    "fourth_place": 1.12
+  },
+  "France": {
+    "first_place": 87.11,
+    "second_place": 10.07,
+    "third_place": 2.27,
+    "fourth_place": 0.55
+  },
+  "Germany": {
+    "first_place": 71.75,
+    "second_place": 18.96,
+    "third_place": 7.31,
+    "fourth_place": 1.98
+  },
+  "Ghana": {
+    "first_place": 2.19,
+    "second_place": 11.78,
+    "third_place": 23.11,
+    "fourth_place": 62.92
+  },
+  "Haiti": {
+    "first_place": 3.76,
+    "second_place": 10.44,
+    "third_place": 23.17,
+    "fourth_place": 62.63
+  },
+  "Iran": {
+    "first_place": 4.5,
+    "second_place": 26.13,
+    "third_place": 25.69,
+    "fourth_place": 43.68
+  },
+  "Iraq": {
+    "first_place": 1.61,
+    "second_place": 12.0,
+    "third_place": 35.17,
+    "fourth_place": 51.22
+  },
+  "Ivory Coast": {
+    "first_place": 9.23,
+    "second_place": 29.22,
+    "third_place": 37.32,
+    "fourth_place": 24.23
+  },
+  "Japan": {
+    "first_place": 19.93,
+    "second_place": 30.99,
+    "third_place": 30.83,
+    "fourth_place": 18.25
+  },
+  "Jordan": {
+    "first_place": 3.55,
+    "second_place": 16.15,
+    "third_place": 23.97,
+    "fourth_place": 56.33
+  },
+  "Mexico": {
+    "first_place": 85.79,
+    "second_place": 12.57,
+    "third_place": 1.41,
+    "fourth_place": 0.23
+  },
+  "Morocco": {
+    "first_place": 11.04,
+    "second_place": 28.37,
+    "third_place": 38.77,
+    "fourth_place": 21.82
+  },
+  "Netherlands": {
+    "first_place": 50.82,
+    "second_place": 27.83,
+    "third_place": 16.84,
+    "fourth_place": 4.51
+  },
+  "New Zealand": {
+    "first_place": 5.1,
+    "second_place": 32.05,
+    "third_place": 27.06,
+    "fourth_place": 35.79
+  },
+  "Norway": {
+    "first_place": 6.82,
+    "second_place": 37.12,
+    "third_place": 32.47,
+    "fourth_place": 23.59
+  },
+  "Panama": {
+    "first_place": 6.04,
+    "second_place": 28.02,
+    "third_place": 41.66,
+    "fourth_place": 24.28
+  },
+  "Paraguay": {
+    "first_place": 10.01,
+    "second_place": 22.38,
+    "third_place": 38.95,
+    "fourth_place": 28.66
+  },
+  "Portugal": {
+    "first_place": 45.05,
+    "second_place": 37.86,
+    "third_place": 12.25,
+    "fourth_place": 4.84
+  },
+  "Qatar": {
+    "first_place": 1.06,
+    "second_place": 6.9,
+    "third_place": 57.96,
+    "fourth_place": 34.08
+  },
+  "Saudi Arabia": {
+    "first_place": 3.41,
+    "second_place": 10.7,
+    "third_place": 49.79,
+    "fourth_place": 36.1
+  },
+  "Scotland": {
+    "first_place": 14.34,
+    "second_place": 41.54,
+    "third_place": 30.9,
+    "fourth_place": 13.22
+  },
+  "Senegal": {
+    "first_place": 4.46,
+    "second_place": 40.81,
+    "third_place": 30.09,
+    "fourth_place": 24.64
+  },
+  "South Africa": {
+    "first_place": 1.13,
+    "second_place": 22.81,
+    "third_place": 44.26,
+    "fourth_place": 31.8
+  },
+  "South Korea": {
+    "first_place": 11.62,
+    "second_place": 49.15,
+    "third_place": 24.18,
+    "fourth_place": 15.05
+  },
+  "Spain": {
+    "first_place": 59.65,
+    "second_place": 31.91,
+    "third_place": 6.29,
+    "fourth_place": 2.15
+  },
+  "Sweden": {
+    "first_place": 24.07,
+    "second_place": 29.4,
+    "third_place": 30.3,
+    "fourth_place": 16.23
+  },
+  "Switzerland": {
+    "first_place": 70.05,
+    "second_place": 26.87,
+    "third_place": 2.76,
+    "fourth_place": 0.32
+  },
+  "Tunisia": {
+    "first_place": 5.18,
+    "second_place": 11.78,
+    "third_place": 22.03,
+    "fourth_place": 61.01
+  },
+  "Turkey": {
+    "first_place": 27.68,
+    "second_place": 40.03,
+    "third_place": 21.82,
+    "fourth_place": 10.47
+  },
+  "USA": {
+    "first_place": 57.57,
+    "second_place": 25.09,
+    "third_place": 12.55,
+    "fourth_place": 4.79
+  },
+  "Uruguay": {
+    "first_place": 33.75,
+    "second_place": 42.51,
+    "third_place": 14.4,
+    "fourth_place": 9.34
+  },
+  "Uzbekistan": {
+    "first_place": 2.99,
+    "second_place": 9.47,
+    "third_place": 38.47,
+    "fourth_place": 49.07
+  }
+}

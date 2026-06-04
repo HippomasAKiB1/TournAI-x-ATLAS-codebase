@@ -98,6 +98,11 @@ def trigger_adaptive_update(
     new_elo_home, new_elo_away = update_elo_ratings(
         elo_home, elo_away, home_score, away_score, is_knockout=(stage != "Group Stage")
     )
+    # Store old Elo ratings for shift narrative calculation
+    old_elo_home = elo_home
+    old_elo_away = elo_away
+    new_elo_home_val = new_elo_home
+    new_elo_away_val = new_elo_away
     
     if home_mask.any():
         df_team_str.loc[home_mask, 'current_elo'] = new_elo_home
@@ -191,6 +196,23 @@ def trigger_adaptive_update(
 
     # 5. MONTE CARLO SIMULATION
     print("\n[5/7] Running Monte Carlo Tournament Re-Simulations...")
+    
+    # Read old simulations.json to compute deltas for latest shift narrative
+    old_sim_path = FRONTEND_DATA_DIR / "simulations.json"
+    old_probs = {}
+    if old_sim_path.exists():
+        try:
+            with open(old_sim_path, "r", encoding="utf-8") as f:
+                old_data = json.load(f)
+                for item in old_data.get("results", []):
+                    old_probs[item["Team"]] = {
+                        "r32": item.get("Round of 32 %", 0.0),
+                        "r16": item.get("Round of 16 %", 0.0),
+                        "champion": item.get("Champion %", 0.0)
+                    }
+        except Exception as e:
+            print(f"  [WARN] Failed to load old simulations: {e}")
+
     groups = extract_groups_from_fixtures(df_fixtures)
     fixture_probs_lookup = {}
     for _, row in df_predictions.iterrows():
@@ -205,6 +227,55 @@ def trigger_adaptive_update(
     df_sim = simulator.run_simulations(n_simulations=n_simulations, show_progress=False)
     df_sim.to_csv(RES / "wc2026_simulation_results.csv", index=False)
     print("  [OK] Re-simulations completed.")
+
+    # Generate narrative shift statement
+    shift_narrative = ""
+    try:
+        home_old = old_probs.get(home_team, {"r32": 50.0, "champion": 2.0})
+        away_old = old_probs.get(away_team, {"r32": 50.0, "champion": 2.0})
+        
+        home_new_row = df_sim[df_sim['Team'] == home_team]
+        away_new_row = df_sim[df_sim['Team'] == away_team]
+        
+        if len(home_new_row) > 0 and len(away_new_row) > 0:
+            home_new_r32 = float(home_new_row['Round of 32 %'].iloc[0])
+            home_new_champ = float(home_new_row['Champion %'].iloc[0])
+            away_new_r32 = float(away_new_row['Round of 32 %'].iloc[0])
+            away_new_champ = float(away_new_row['Champion %'].iloc[0])
+            
+            home_delta_r32 = home_new_r32 - home_old["r32"]
+            home_delta_champ = home_new_champ - home_old["champion"]
+            away_delta_r32 = away_new_r32 - away_old["r32"]
+            away_delta_champ = away_new_champ - away_old["champion"]
+            
+            elo_change_h = new_elo_home_val - old_elo_home
+            elo_change_a = new_elo_away_val - old_elo_away
+            
+            winner = home_team if home_score > away_score else away_team if away_score > home_score else None
+            
+            if winner == home_team:
+                shift_narrative = (
+                    f"Following {home_team}'s {home_score}-{away_score} victory over {away_team}, "
+                    f"{home_team}'s Elo rose by {elo_change_h:+.1f} pts, increasing their Round of 32 advancement probability by {home_delta_r32:+.1f}% "
+                    f"(now {home_new_r32:.1f}%) and title chances by {home_delta_champ:+.1f}%. "
+                    f"Conversely, {away_team}'s Elo fell by {abs(elo_change_a):.1f} pts, dropping their advancement odds by {abs(away_delta_r32):.1f}%."
+                )
+            elif winner == away_team:
+                shift_narrative = (
+                    f"Following {away_team}'s {away_score}-{home_score} victory over {home_team}, "
+                    f"{away_team}'s Elo rose by {elo_change_a:+.1f} pts, increasing their Round of 32 advancement probability by {away_delta_r32:+.1f}% "
+                    f"(now {away_new_r32:.1f}%) and title chances by {away_delta_champ:+.1f}%. "
+                    f"Conversely, {home_team}'s Elo fell by {abs(elo_change_h):.1f} pts, dropping their advancement odds by {abs(home_delta_r32):.1f}%."
+                )
+            else:
+                shift_narrative = (
+                    f"The {home_team} vs {away_team} match ended in a {home_score}-{away_score} draw. "
+                    f"{home_team}'s Elo changed by {elo_change_h:+.1f} pts, adjusting their Round of 32 probability by {home_delta_r32:+.1f}%. "
+                    f"{away_team}'s Elo changed by {elo_change_a:+.1f} pts, adjusting their Round of 32 probability by {away_delta_r32:+.1f}%."
+                )
+    except Exception as e:
+        shift_narrative = f"Completed match: {home_team} {home_score}-{away_score} {away_team}."
+        print(f"  [WARN] Failed to compute shift narrative: {e}")
 
     # 6. PLAYER INTELLIGENCE & SHAP EXPLANATIONS
     print("\n[6/7] Regenerating Player Scores & SHAP Explanations...")
@@ -290,6 +361,154 @@ def trigger_adaptive_update(
     
     # Injuries JSON
     save_clean_json(df_injuries.to_dict('records'), "injuries.json")
+    
+    # Qualification JSON
+    qualification_json = simulator.team_positions_pct
+    save_clean_json(qualification_json, "qualification.json")
+    
+    # Latest Shift JSON
+    save_clean_json({"shift_narrative": shift_narrative}, "latest_shift.json")
+    
+    # Bracket JSON Compilation
+    group_winners = {}
+    group_runners_up = {}
+    third_place_teams = []
+    
+    for group_label, grp_df in df_standings.groupby('Group'):
+        grp_sorted = grp_df.sort_values('Position')
+        if len(grp_sorted) >= 3:
+            winner = grp_sorted.iloc[0]['Team']
+            runner = grp_sorted.iloc[1]['Team']
+            third = grp_sorted.iloc[2]['Team']
+            
+            group_winners[group_label] = winner
+            group_runners_up[group_label] = runner
+            
+            pts = int(grp_sorted.iloc[2]['Pts'])
+            gd = int(grp_sorted.iloc[2]['GD'])
+            gf = int(grp_sorted.iloc[2]['GF'])
+            third_place_teams.append({'team': third, 'pts': pts, 'gd': gd, 'gf': gf})
+            
+    third_place_teams.sort(key=lambda x: (x['pts'], x['gd'], x['gf']), reverse=True)
+    best_thirds = [x['team'] for x in third_place_teams[:8]]
+    
+    r32_pairings = [
+        (group_winners.get('A', 'TBD'), group_runners_up.get('B', 'TBD')),
+        (group_winners.get('C', 'TBD'), group_runners_up.get('D', 'TBD')),
+        (group_winners.get('E', 'TBD'), group_runners_up.get('F', 'TBD')),
+        (group_winners.get('G', 'TBD'), group_runners_up.get('H', 'TBD')),
+        (group_winners.get('I', 'TBD'), group_runners_up.get('J', 'TBD')),
+        (group_winners.get('K', 'TBD'), group_runners_up.get('L', 'TBD')),
+        (group_winners.get('B', 'TBD'), group_runners_up.get('A', 'TBD')),
+        (group_winners.get('D', 'TBD'), group_runners_up.get('C', 'TBD')),
+        (group_winners.get('F', 'TBD'), group_runners_up.get('E', 'TBD')),
+        (group_winners.get('H', 'TBD'), group_runners_up.get('G', 'TBD')),
+        (group_winners.get('J', 'TBD'), group_runners_up.get('I', 'TBD')),
+        (group_winners.get('L', 'TBD'), group_runners_up.get('K', 'TBD')),
+        (best_thirds[0] if len(best_thirds) > 0 else "TBD", best_thirds[1] if len(best_thirds) > 1 else "TBD"),
+        (best_thirds[2] if len(best_thirds) > 2 else "TBD", best_thirds[3] if len(best_thirds) > 3 else "TBD"),
+        (best_thirds[4] if len(best_thirds) > 4 else "TBD", best_thirds[5] if len(best_thirds) > 5 else "TBD"),
+        (best_thirds[6] if len(best_thirds) > 6 else "TBD", best_thirds[7] if len(best_thirds) > 7 else "TBD"),
+    ]
+    
+    def get_stage_prob(team_name, stage_key):
+        row = df_sim[df_sim['Team'] == team_name]
+        if len(row) > 0:
+            return float(row[stage_key].iloc[0])
+        return 0.0
+        
+    def get_likely_winner(team_a, team_b, stage_prob_key):
+        prob_a = get_stage_prob(team_a, stage_prob_key)
+        prob_b = get_stage_prob(team_b, stage_prob_key)
+        return team_a if prob_a >= prob_b else team_b
+
+    r32_matches = []
+    for idx, (h, a) in enumerate(r32_pairings):
+        r32_matches.append({
+            'match_id': idx + 1,
+            'home_team': h,
+            'away_team': a,
+            'home_prob': get_stage_prob(h, 'Round of 32 %'),
+            'away_prob': get_stage_prob(a, 'Round of 32 %'),
+            'home_adv_prob': get_stage_prob(h, 'Round of 16 %'),
+            'away_adv_prob': get_stage_prob(a, 'Round of 16 %')
+        })
+        
+    r16_pairings = []
+    for i in range(0, 16, 2):
+        h = get_likely_winner(r32_pairings[i][0], r32_pairings[i][1], 'Round of 16 %')
+        a = get_likely_winner(r32_pairings[i+1][0], r32_pairings[i+1][1], 'Round of 16 %')
+        r16_pairings.append((h, a))
+        
+    r16_matches = []
+    for idx, (h, a) in enumerate(r16_pairings):
+        r16_matches.append({
+            'match_id': 17 + idx,
+            'home_team': h,
+            'away_team': a,
+            'home_prob': get_stage_prob(h, 'Round of 16 %'),
+            'away_prob': get_stage_prob(a, 'Round of 16 %'),
+            'home_adv_prob': get_stage_prob(h, 'Quarter-Final %'),
+            'away_adv_prob': get_stage_prob(a, 'Quarter-Final %')
+        })
+        
+    qf_pairings = []
+    for i in range(0, 8, 2):
+        h = get_likely_winner(r16_pairings[i][0], r16_pairings[i][1], 'Quarter-Final %')
+        a = get_likely_winner(r16_pairings[i+1][0], r16_pairings[i+1][1], 'Quarter-Final %')
+        qf_pairings.append((h, a))
+        
+    qf_matches = []
+    for idx, (h, a) in enumerate(qf_pairings):
+        qf_matches.append({
+            'match_id': 25 + idx,
+            'home_team': h,
+            'away_team': a,
+            'home_prob': get_stage_prob(h, 'Quarter-Final %'),
+            'away_prob': get_stage_prob(a, 'Quarter-Final %'),
+            'home_adv_prob': get_stage_prob(h, 'Semi-Final %'),
+            'away_adv_prob': get_stage_prob(a, 'Semi-Final %')
+        })
+        
+    sf_pairings = []
+    for i in range(0, 4, 2):
+        h = get_likely_winner(qf_pairings[i][0], qf_pairings[i][1], 'Semi-Final %')
+        a = get_likely_winner(qf_pairings[i+1][0], qf_pairings[i+1][1], 'Semi-Final %')
+        sf_pairings.append((h, a))
+        
+    sf_matches = []
+    for idx, (h, a) in enumerate(sf_pairings):
+        sf_matches.append({
+            'match_id': 29 + idx,
+            'home_team': h,
+            'away_team': a,
+            'home_prob': get_stage_prob(h, 'Semi-Final %'),
+            'away_prob': get_stage_prob(a, 'Semi-Final %'),
+            'home_adv_prob': get_stage_prob(h, 'Finalist %'),
+            'away_adv_prob': get_stage_prob(a, 'Finalist %')
+        })
+        
+    f_home = get_likely_winner(sf_pairings[0][0], sf_pairings[0][1], 'Finalist %')
+    f_away = get_likely_winner(sf_pairings[1][0], sf_pairings[1][1], 'Finalist %')
+    
+    final_match = [{
+        'match_id': 31,
+        'home_team': f_home,
+        'away_team': f_away,
+        'home_prob': get_stage_prob(f_home, 'Finalist %'),
+        'away_prob': get_stage_prob(f_away, 'Finalist %'),
+        'home_adv_prob': get_stage_prob(f_home, 'Champion %'),
+        'away_adv_prob': get_stage_prob(f_away, 'Champion %')
+    }]
+    
+    bracket_json = {
+        'r32': r32_matches,
+        'r16': r16_matches,
+        'qf': qf_matches,
+        'sf': sf_matches,
+        'final': final_match
+    }
+    save_clean_json(bracket_json, "bracket.json")
     
     print("\n" + "=" * 70)
     print("ATLAS Adaptive Update & Sanitization Complete!")

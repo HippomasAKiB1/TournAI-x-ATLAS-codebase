@@ -18,7 +18,9 @@ import {
   TrendingUp,
   Cpu,
   Trophy,
-  Sparkles
+  Sparkles,
+  AlertCircle,
+  Play
 } from "lucide-react";
 import {
   getPredictions,
@@ -27,7 +29,14 @@ import {
   getExplanations,
   getModelComparison,
   getGroupStandings,
-  getInjuries
+  getInjuries,
+  getBracketProbabilities,
+  getQualificationProbabilities,
+  getLatestShift,
+  getPipelineStatus,
+  getDbMatches,
+  ingestMatch,
+  runWhatIfSimulation
 } from "../lib/api";
 import {
   PredictionsResponse,
@@ -70,46 +79,69 @@ export default function Home() {
   const [modelComparison, setModelComparison] = useState<ModelComparisonResponse | null>(null);
   const [groupStandings, setGroupStandings] = useState<GroupStandingsResponse | null>(null);
   const [injuries, setInjuries] = useState<InjuryScenario[]>([]);
+  const [bracket, setBracket] = useState<any>(null);
+  const [qualification, setQualification] = useState<any>(null);
+  const [dbMatches, setDbMatches] = useState<any[]>([]);
+  const [latestShift, setLatestShift] = useState<any>(null);
+  const [pipelineStatus, setPipelineStatus] = useState<any>({ status: "idle" });
 
   // Navigation State
   const [activeTab, setActiveTab] = useState<'dashboard' | 'standings' | 'predictor' | 'players' | 'whatif' | 'explain'>('dashboard');
 
-  // Load Data
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [
-          predData,
-          simData,
-          playerData,
-          expData,
-          modelData,
-          standingsData,
-          injuryData
-        ] = await Promise.all([
-          getPredictions(),
-          getSimulations(),
-          getPlayers(),
-          getExplanations(),
-          getModelComparison(),
-          getGroupStandings(),
-          getInjuries()
-        ]);
+  // Shared active injury star state (propagates to H2H predictor alert)
+  const [activeInjuryPlayer, setActiveInjuryPlayer] = useState<string | null>(null);
 
-        setPredictions(predData);
-        setSimulations(simData);
-        setPlayers(playerData);
-        setExplanations(expData);
-        setModelComparison(modelData);
-        setGroupStandings(standingsData);
-        setInjuries(injuryData);
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setError(err instanceof Error ? err.message : 'Unknown error loading static assets.');
-        setLoading(false);
-      }
+  const loadData = async () => {
+    try {
+      const [
+        predData,
+        simData,
+        playerData,
+        expData,
+        modelData,
+        standingsData,
+        injuryData,
+        bracketData,
+        qualData,
+        dbMatchesData,
+        shiftData,
+        statusData
+      ] = await Promise.all([
+        getPredictions(),
+        getSimulations(),
+        getPlayers(),
+        getExplanations(),
+        getModelComparison(),
+        getGroupStandings(),
+        getInjuries(),
+        getBracketProbabilities(),
+        getQualificationProbabilities(),
+        getDbMatches(),
+        getLatestShift(),
+        getPipelineStatus()
+      ]);
+
+      setPredictions(predData);
+      setSimulations(simData);
+      setPlayers(playerData);
+      setExplanations(expData);
+      setModelComparison(modelData);
+      setGroupStandings(standingsData);
+      setInjuries(injuryData);
+      setBracket(bracketData);
+      setQualification(qualData);
+      setDbMatches(dbMatchesData);
+      setLatestShift(shiftData);
+      setPipelineStatus(statusData);
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : 'Unknown error loading static assets.');
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -172,7 +204,7 @@ export default function Home() {
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           {[
             { id: 'dashboard', label: 'Simulation Overview', icon: LayoutDashboard },
-            { id: 'standings', label: 'Group Standings', icon: Grid },
+            { id: 'standings', label: 'Standings & Bracket', icon: Grid },
             { id: 'predictor', label: 'H2H Predictor', icon: Swords },
             { id: 'players', label: 'Player Intelligence', icon: Users },
             { id: 'whatif', label: 'Injury What-If Lab', icon: Activity },
@@ -236,23 +268,44 @@ export default function Home() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 p-4 lg:p-8 overflow-y-auto max-h-screen">
         {activeTab === 'dashboard' && simulations && (
-          <DashboardView simulations={simulations} players={players} />
+          <DashboardView
+            simulations={simulations}
+            players={players}
+            latestShift={latestShift}
+            dbMatches={dbMatches}
+            pipelineStatus={pipelineStatus}
+            predictions={predictions}
+            onRefresh={loadData}
+          />
         )}
-        {activeTab === 'standings' && groupStandings && (
-          <StandingsView standings={groupStandings} />
+        {activeTab === 'standings' && groupStandings && bracket && simulations && (
+          <StandingsView
+            standings={groupStandings}
+            bracket={bracket}
+            qualification={qualification}
+            simulations={simulations}
+          />
         )}
-        {activeTab === 'predictor' && predictions && explanations && players && (
+        {activeTab === 'predictor' && predictions && explanations && players && injuries && (
           <PredictorView
             predictions={predictions}
             explanations={explanations}
             players={players}
+            injuries={injuries}
+            activeInjuryPlayer={activeInjuryPlayer}
           />
         )}
         {activeTab === 'players' && players && (
           <PlayersView players={players} />
         )}
-        {activeTab === 'whatif' && injuries && players && (
-          <WhatIfView injuries={injuries} players={players} />
+        {activeTab === 'whatif' && injuries && players && simulations && (
+          <WhatIfView
+            injuries={injuries}
+            players={players}
+            simulations={simulations}
+            activeInjuryPlayer={activeInjuryPlayer}
+            setActiveInjuryPlayer={setActiveInjuryPlayer}
+          />
         )}
         {activeTab === 'explain' && explanations && modelComparison && (
           <ExplainabilityView
@@ -270,10 +323,20 @@ export default function Home() {
    ============================================================================ */
 function DashboardView({
   simulations,
-  players
+  players,
+  latestShift,
+  dbMatches,
+  pipelineStatus,
+  predictions,
+  onRefresh
 }: {
   simulations: SimulationsResponse;
   players: PlayersResponse | null;
+  latestShift: any;
+  dbMatches: any[];
+  pipelineStatus: any;
+  predictions: PredictionsResponse | null;
+  onRefresh: () => Promise<void>;
 }) {
   const simResults = simulations.results || [];
   
@@ -289,8 +352,74 @@ function DashboardView({
     "Finalist %": team["Finalist %"],
   }));
 
-  // Gradient helper for chart bars
   const colors = ["#a855f7", "#ec4899", "#3b82f6", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#6366f1", "#8b5cf6", "#14b8a6", "#84cc16", "#06b6d4"];
+
+  // Ingestion State
+  const completedMatchIds = new Set(dbMatches.filter(m => m.status === 'completed').map(m => m.id));
+  const upcomingMatches = (predictions?.predictions || []).filter(p => !completedMatchIds.has(p.fixture_id));
+
+  const [selectedFixtureId, setSelectedFixtureId] = useState<number>(1);
+  const [homeScore, setHomeScore] = useState<number>(0);
+  const [awayScore, setAwayScore] = useState<number>(0);
+  const [adminKey, setAdminKey] = useState<string>("atlas-admin-secret-key-2026");
+  const [isIngesting, setIsIngesting] = useState<boolean>(false);
+  const [ingestError, setIngestError] = useState<string | null>(null);
+  const [ingestLog, setIngestLog] = useState<string>("");
+
+  useEffect(() => {
+    if (upcomingMatches.length > 0 && !upcomingMatches.some(m => m.fixture_id === selectedFixtureId)) {
+      setSelectedFixtureId(upcomingMatches[0].fixture_id);
+    }
+  }, [upcomingMatches, selectedFixtureId]);
+
+  const handleIngest = async () => {
+    const match = predictions?.predictions.find(p => p.fixture_id === selectedFixtureId);
+    if (!match) return;
+    setIsIngesting(true);
+    setIngestError(null);
+    setIngestLog("Submitting match result to ingestion queue...");
+    try {
+      await ingestMatch(
+        match.home_team,
+        match.away_team,
+        homeScore,
+        awayScore,
+        "Group Stage",
+        adminKey
+      );
+      
+      setIngestLog("Adaptive update queued. Retraining Voting Ensemble & running Monte Carlo paths...");
+      
+      // Poll pipeline status
+      const interval = setInterval(async () => {
+        try {
+          const status = await getPipelineStatus();
+          if (status.status === 'idle') {
+            clearInterval(interval);
+            setIsIngesting(false);
+            setIngestLog("");
+            await onRefresh();
+          } else {
+            setIngestLog("Simulation running... (updating Elo ratings and bracket configurations)");
+          }
+        } catch (e) {
+          console.warn("Error checking pipeline status", e);
+        }
+      }, 2000);
+      
+      // Timeout safety after 40 seconds
+      setTimeout(() => {
+        clearInterval(interval);
+        setIsIngesting(false);
+        setIngestLog("");
+        onRefresh();
+      }, 40000);
+      
+    } catch (err: any) {
+      setIngestError(err.message || 'Pipeline ingestion execution failed.');
+      setIsIngesting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -303,10 +432,29 @@ function DashboardView({
             Based on {simulations.n_simulations.toLocaleString()} Monte Carlo pipeline simulations.
           </p>
         </div>
-        <div className="px-4 py-2 bg-purple-950/30 border border-purple-800/40 rounded-xl text-xs text-purple-300 font-semibold flex items-center gap-2 animate-pulse-slow">
-          <Sparkles className="w-4 h-4 text-purple-400" /> Global Predictions Active
+        <div className="flex items-center gap-3">
+          {(isIngesting || pipelineStatus.status === 'running') && (
+            <div className="flex items-center gap-2 text-xs text-cyan-400 font-semibold bg-cyan-950/20 border border-cyan-800/30 px-3 py-1.5 rounded-xl animate-pulse">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>ATLAS Pipeline Processing...</span>
+            </div>
+          )}
+          <div className="px-4 py-2 bg-purple-950/30 border border-purple-800/40 rounded-xl text-xs text-purple-300 font-semibold flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-purple-400" /> Global Predictions Active
+          </div>
         </div>
       </div>
+
+      {/* Narrative Callout banner */}
+      {latestShift && latestShift.shift_narrative && (
+        <div className="glass-card p-6 rounded-2xl border border-purple-500/20 bg-gradient-to-r from-purple-950/20 to-cyan-950/20 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-3 text-[9px] font-mono text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
+            <Sparkles className="w-3 h-3 text-purple-400" /> ATLAS Live Insight
+          </div>
+          <h4 className="text-xs font-bold text-purple-300 mb-2 font-mono uppercase tracking-wider">Tournament Probability Shift</h4>
+          <p className="text-sm text-zinc-300 leading-relaxed font-sans">{latestShift.shift_narrative}</p>
+        </div>
+      )}
 
       {/* Highlights Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -389,7 +537,7 @@ function DashboardView({
           </div>
         </div>
 
-        {/* Top 10 probabilities list */}
+        {/* Top 15 probabilities list */}
         <div className="glass-card p-6 rounded-2xl flex flex-col">
           <div className="mb-4">
             <h4 className="text-base font-bold text-white">Stage-by-Stage Probabilities</h4>
@@ -415,6 +563,112 @@ function DashboardView({
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Live Match Ingestion Control Panel (Admin Tool for testing adaptiveness) */}
+      <div className="glass-card p-6 rounded-2xl border border-zinc-800 bg-gradient-to-tr from-zinc-950 to-zinc-900/40">
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-4 mb-4">
+          <div>
+            <h4 className="text-base font-bold text-white flex items-center gap-2">
+              <Cpu className="w-5 h-5 text-cyan-400" /> Ingestion Control Panel (Live Testing Admin)
+            </h4>
+            <p className="text-xs text-zinc-400">Simulate a match completion to trigger ELO shifts, model retraining, and simulations.</p>
+          </div>
+          <span className="px-2 py-0.5 text-[9px] font-bold text-cyan-300 bg-cyan-950/20 border border-cyan-800/40 rounded uppercase font-mono tracking-widest">
+            Dev Mode
+          </span>
+        </div>
+
+        {isIngesting ? (
+          <div className="flex flex-col items-center justify-center py-6 text-center">
+            <Loader2 className="w-10 h-10 text-cyan-400 animate-spin mb-3" />
+            <p className="text-sm font-semibold text-zinc-200">{ingestLog}</p>
+            <p className="text-xs text-zinc-500 mt-1">This takes about 5-10 seconds to retrain models & simulate 10k bracket paths.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {ingestError && (
+              <div className="p-3 bg-rose-950/20 border border-rose-900/30 text-rose-400 rounded-xl text-xs flex items-center gap-2">
+                <AlertCircle className="w-4.5 h-4.5 text-rose-500 shrink-0" />
+                <span>{ingestError}</span>
+              </div>
+            )}
+
+            {upcomingMatches.length === 0 ? (
+              <div className="text-zinc-500 text-xs py-2 text-center font-mono">
+                All 72 scheduled group stage fixtures have been ingested. Adaptive model is fully loaded!
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                <div className="lg:col-span-4">
+                  <label className="block text-[10px] font-mono uppercase text-zinc-500 mb-1">Select Fixture</label>
+                  <select
+                    value={selectedFixtureId}
+                    onChange={(e) => setSelectedFixtureId(Number(e.target.value))}
+                    className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500"
+                  >
+                    {upcomingMatches.map(m => (
+                      <option key={m.fixture_id} value={m.fixture_id}>
+                        Match {m.fixture_id}: {m.home_team} vs. {m.away_team}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="lg:col-span-2">
+                  <label className="block text-[10px] font-mono uppercase text-zinc-500 mb-1">
+                    {predictions?.predictions.find(p => p.fixture_id === selectedFixtureId)?.home_team} Score
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={homeScore}
+                    onChange={(e) => setHomeScore(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-xl px-4 py-2 text-center text-sm font-bold focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="lg:col-span-2">
+                  <label className="block text-[10px] font-mono uppercase text-zinc-500 mb-1">
+                    {predictions?.predictions.find(p => p.fixture_id === selectedFixtureId)?.away_team} Score
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={awayScore}
+                    onChange={(e) => setAwayScore(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-xl px-4 py-2 text-center text-sm font-bold focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="lg:col-span-3">
+                  <label className="block text-[10px] font-mono uppercase text-zinc-500 mb-1 flex items-center gap-1.5">
+                    Pipeline Secret Key
+                    <span title="X-ATLAS-KEY validation string"><Info className="w-3 h-3 text-zinc-500 cursor-help" /></span>
+                  </label>
+                  <input
+                    type="password"
+                    value={adminKey}
+                    onChange={(e) => setAdminKey(e.target.value)}
+                    placeholder="Auth key"
+                    className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="lg:col-span-1">
+                  <button
+                    onClick={handleIngest}
+                    disabled={isIngesting || pipelineStatus.status === 'running'}
+                    className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:bg-zinc-800 text-white disabled:text-zinc-500 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5" />
+                    Run
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Full Monte Carlo stage statistics */}
@@ -459,9 +713,20 @@ function DashboardView({
 }
 
 /* ============================================================================
-   VIEW 2: GROUP STAGE STANDINGS
+   VIEW 2: STANDINGS & KNOCKOUT BRACKET
    ============================================================================ */
-function StandingsView({ standings }: { standings: GroupStandingsResponse }) {
+function StandingsView({
+  standings,
+  bracket,
+  qualification,
+  simulations
+}: {
+  standings: GroupStandingsResponse;
+  bracket: any;
+  qualification: any;
+  simulations: SimulationsResponse;
+}) {
+  const [subTab, setSubTab] = useState<'groups' | 'bracket'>('groups');
   const groupsList = Object.keys(standings).sort((a, b) => a.localeCompare(b));
   const [selectedGroup, setSelectedGroup] = useState<string>(groupsList[0] || "Group A");
 
@@ -469,111 +734,246 @@ function StandingsView({ standings }: { standings: GroupStandingsResponse }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <Grid className="w-6 h-6 text-cyan-400" /> Group Stage Standings Simulator
-        </h2>
-        <p className="text-sm text-zinc-400">
-          Predicted rankings and advancement outcomes for all 12 World Cup 2026 groups.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            <Grid className="w-6 h-6 text-cyan-400" /> Tournament Standings & Bracket Tracker
+          </h2>
+          <p className="text-sm text-zinc-400">
+            Monitor real-time simulated standings rankings and knockout bracket progress.
+          </p>
+        </div>
+
+        {/* View Toggle */}
+        <div className="flex bg-zinc-950/60 p-1 border border-zinc-800 rounded-xl max-w-sm shrink-0">
+          <button
+            onClick={() => setSubTab('groups')}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
+              subTab === 'groups'
+                ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            Group Standings
+          </button>
+          <button
+            onClick={() => setSubTab('bracket')}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
+              subTab === 'bracket'
+                ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            Knockout Bracket
+          </button>
+        </div>
       </div>
 
-      {/* Tab grid for all 12 groups */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
-        {groupsList.map((group) => {
-          const letter = group.replace("Group ", "");
-          const isSelected = selectedGroup === group;
-          return (
-            <button
-              key={group}
-              onClick={() => setSelectedGroup(group)}
-              className={`py-2 px-1 text-center font-mono font-bold text-xs rounded-lg transition-all ${
-                isSelected
-                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-glow-cyan"
-                  : "bg-zinc-900/40 text-zinc-500 hover:text-zinc-300 border border-zinc-800/60"
-              }`}
-            >
-              {letter}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Selected Group Standing Card */}
-      <div className="glass-card rounded-2xl overflow-hidden">
-        <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-white">{selectedGroup} standings</h3>
-            <p className="text-xs text-zinc-400">Simulation details for {selectedGroup} matches.</p>
+      {subTab === 'groups' ? (
+        <>
+          {/* Tab grid for all 12 groups */}
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
+            {groupsList.map((group) => {
+              const letter = group.replace("Group ", "");
+              const isSelected = selectedGroup === group;
+              return (
+                <button
+                  key={group}
+                  onClick={() => setSelectedGroup(group)}
+                  className={`py-2 px-1 text-center font-mono font-bold text-xs rounded-lg transition-all ${
+                    isSelected
+                      ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-glow-cyan"
+                      : "bg-zinc-900/40 text-zinc-500 hover:text-zinc-300 border border-zinc-800/60"
+                  }`}
+                >
+                  {letter}
+                </button>
+              );
+            })}
           </div>
-          <span className="px-3 py-1 bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] uppercase rounded-full">
-            Predicted Standing
-          </span>
-        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr className="bg-zinc-950/40 border-b border-zinc-800 text-zinc-500 font-mono uppercase text-xs">
-                <th className="py-3.5 px-6 text-center w-16">Rank</th>
-                <th className="py-3.5 px-4">Team</th>
-                <th className="py-3.5 px-4 text-center">MP</th>
-                <th className="py-3.5 px-4 text-center">W</th>
-                <th className="py-3.5 px-4 text-center">D</th>
-                <th className="py-3.5 px-4 text-center">L</th>
-                <th className="py-3.5 px-4 text-center">GF</th>
-                <th className="py-3.5 px-4 text-center">GA</th>
-                <th className="py-3.5 px-4 text-center">GD</th>
-                <th className="py-3.5 px-4 text-center">Pts</th>
-                <th className="py-3.5 px-6 text-center">Advancement Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-900 text-zinc-300">
-              {currentGroupData.map((team) => {
-                const gdSign = team.GD > 0 ? `+${team.GD}` : team.GD;
-                
-                // Color badges for qualifies status
-                let qualBadge = null;
-                if (team.Qualifies === "Yes") {
-                  qualBadge = (
-                    <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-950/30 text-emerald-400 border border-emerald-800/40">
-                      Qualified
-                    </span>
-                  );
-                } else if (team.Qualifies?.includes("Maybe")) {
-                  qualBadge = (
-                    <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-amber-950/30 text-amber-400 border border-amber-800/40">
-                      3rd Place Playoff
-                    </span>
-                  );
-                } else {
-                  qualBadge = (
-                    <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rose-950/30 text-rose-400 border border-rose-800/40">
-                      Eliminated
-                    </span>
-                  );
-                }
+          {/* Selected Group Standing Card */}
+          <div className="glass-card rounded-2xl overflow-hidden">
+            <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-white">{selectedGroup} Standings</h3>
+                <p className="text-xs text-zinc-400">Simulation details and qualification chances for {selectedGroup}.</p>
+              </div>
+              <span className="px-3 py-1 bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono text-[10px] uppercase rounded-full">
+                Predicted Standing
+              </span>
+            </div>
 
-                return (
-                  <tr key={team.Team} className="hover:bg-zinc-900/10 transition">
-                    <td className="py-4 px-6 text-center font-mono font-extrabold text-zinc-400">{team.Position}</td>
-                    <td className="py-4 px-4 font-semibold text-white">{team.Team}</td>
-                    <td className="py-4 px-4 text-center font-mono">{team.MP}</td>
-                    <td className="py-4 px-4 text-center font-mono">{team.W}</td>
-                    <td className="py-4 px-4 text-center font-mono">{team.D}</td>
-                    <td className="py-4 px-4 text-center font-mono">{team.L}</td>
-                    <td className="py-4 px-4 text-center font-mono">{team.GF}</td>
-                    <td className="py-4 px-4 text-center font-mono">{team.GA}</td>
-                    <td className="py-4 px-4 text-center font-mono font-semibold">{gdSign}</td>
-                    <td className="py-4 px-4 text-center font-bold text-white font-mono">{team.Pts}</td>
-                    <td className="py-4 px-6 text-center">{qualBadge}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="bg-zinc-950/40 border-b border-zinc-800 text-zinc-500 font-mono uppercase text-xs">
+                    <th className="py-3.5 px-6 text-center w-16">Rank</th>
+                    <th className="py-3.5 px-4">Team</th>
+                    <th className="py-3.5 px-4 text-center">MP</th>
+                    <th className="py-3.5 px-4 text-center">W</th>
+                    <th className="py-3.5 px-4 text-center">D</th>
+                    <th className="py-3.5 px-4 text-center">L</th>
+                    <th className="py-3.5 px-4 text-center">GF</th>
+                    <th className="py-3.5 px-4 text-center">GA</th>
+                    <th className="py-3.5 px-4 text-center">GD</th>
+                    <th className="py-3.5 px-4 text-center">Pts</th>
+                    <th className="py-3.5 px-4 text-center">Group Odds (Monte Carlo)</th>
+                    <th className="py-3.5 px-6 text-center">Advancement Status</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-zinc-900 text-zinc-300">
+                  {currentGroupData.map((team) => {
+                    const gdSign = team.GD > 0 ? `+${team.GD}` : team.GD;
+                    
+                    // Look up MC probabilities
+                    const simRow = simulations.results.find(r => r.Team.toLowerCase() === team.Team.toLowerCase());
+                    const r32Pct = simRow ? simRow["Round of 32 %"] : 0.0;
+                    
+                    const qualRow = qualification ? qualification[team.Team] : null;
+                    const pFirst = qualRow?.first_place ?? 0.0;
+                    const pSecond = qualRow?.second_place ?? 0.0;
+
+                    // Color badges for qualifies status
+                    let qualBadge = null;
+                    if (team.Qualifies === "Yes") {
+                      qualBadge = (
+                        <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-950/30 text-emerald-400 border border-emerald-800/40">
+                          Qualified
+                        </span>
+                      );
+                    } else if (team.Qualifies?.includes("Maybe")) {
+                      qualBadge = (
+                        <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-amber-950/30 text-amber-400 border border-amber-800/40">
+                          3rd Place Playoff
+                        </span>
+                      );
+                    } else {
+                      qualBadge = (
+                        <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rose-950/30 text-rose-400 border border-rose-800/40">
+                          Eliminated
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <tr key={team.Team} className="hover:bg-zinc-900/10 transition">
+                        <td className="py-4 px-6 text-center font-mono font-extrabold text-zinc-400">{team.Position}</td>
+                        <td className="py-4 px-4 font-semibold text-white">{team.Team}</td>
+                        <td className="py-4 px-4 text-center font-mono">{team.MP}</td>
+                        <td className="py-4 px-4 text-center font-mono">{team.W}</td>
+                        <td className="py-4 px-4 text-center font-mono">{team.D}</td>
+                        <td className="py-4 px-4 text-center font-mono">{team.L}</td>
+                        <td className="py-4 px-4 text-center font-mono">{team.GF}</td>
+                        <td className="py-4 px-4 text-center font-mono">{team.GA}</td>
+                        <td className="py-4 px-4 text-center font-mono font-semibold">{gdSign}</td>
+                        <td className="py-4 px-4 text-center font-bold text-white font-mono">{team.Pts}</td>
+                        <td className="py-4 px-4">
+                          <div className="flex gap-2 justify-center text-[10px] font-mono">
+                            <span className="px-2 py-0.5 rounded bg-cyan-950/45 border border-cyan-800/30 text-cyan-400">1st: {pFirst.toFixed(0)}%</span>
+                            <span className="px-2 py-0.5 rounded bg-indigo-950/45 border border-indigo-800/30 text-indigo-400">2nd: {pSecond.toFixed(0)}%</span>
+                            <span className={`px-2 py-0.5 rounded border font-bold ${
+                              r32Pct > 70 
+                                ? 'bg-emerald-950/45 border-emerald-800/30 text-emerald-400' 
+                                : r32Pct > 30 
+                                  ? 'bg-amber-950/45 border-amber-800/30 text-amber-400' 
+                                  : 'bg-rose-950/45 border-rose-800/30 text-rose-400'
+                            }`}>
+                              Adv: {r32Pct.toFixed(0)}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 text-center">{qualBadge}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      ) : (
+        /* Knockout Bracket View */
+        <div className="glass-card p-6 rounded-2xl">
+          <div className="mb-6 flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-amber-400" /> Projected Knockout Paths & Advancement Odds
+              </h3>
+              <p className="text-xs text-zinc-400">Projected bracket populated dynamically by Monte Carlo simulation likelihoods.</p>
+            </div>
+            <div className="text-xs font-mono text-zinc-500 bg-zinc-900/60 px-3 py-1 border border-zinc-800 rounded-full">
+              Scroll horizontally →
+            </div>
+          </div>
+          
+          <div className="w-full overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-zinc-800">
+            <div className="flex gap-8 p-2 min-w-[1400px] justify-between items-stretch">
+              {/* Round of 32 Column */}
+              <div className="flex flex-col justify-around py-2 space-y-4 w-64">
+                <h4 className="text-xs font-bold font-mono tracking-widest text-zinc-500 text-center uppercase border-b border-zinc-900 pb-2 mb-2">Round of 32</h4>
+                {bracket.r32.map((match: any) => (
+                  <BracketMatchCard key={match.match_id} match={match} />
+                ))}
+              </div>
+              
+              {/* Round of 16 Column */}
+              <div className="flex flex-col justify-around py-2 space-y-4 w-64">
+                <h4 className="text-xs font-bold font-mono tracking-widest text-zinc-500 text-center uppercase border-b border-zinc-900 pb-2 mb-2">Round of 16</h4>
+                {bracket.r16.map((match: any) => (
+                  <BracketMatchCard key={match.match_id} match={match} />
+                ))}
+              </div>
+              
+              {/* Quarter-Final Column */}
+              <div className="flex flex-col justify-around py-2 space-y-4 w-64">
+                <h4 className="text-xs font-bold font-mono tracking-widest text-zinc-500 text-center uppercase border-b border-zinc-900 pb-2 mb-2">Quarter-Finals</h4>
+                {bracket.qf.map((match: any) => (
+                  <BracketMatchCard key={match.match_id} match={match} />
+                ))}
+              </div>
+              
+              {/* Semi-Final Column */}
+              <div className="flex flex-col justify-around py-2 space-y-4 w-64">
+                <h4 className="text-xs font-bold font-mono tracking-widest text-zinc-500 text-center uppercase border-b border-zinc-900 pb-2 mb-2">Semi-Finals</h4>
+                {bracket.sf.map((match: any) => (
+                  <BracketMatchCard key={match.match_id} match={match} />
+                ))}
+              </div>
+              
+              {/* Final Column */}
+              <div className="flex flex-col justify-around py-2 space-y-4 w-64">
+                <h4 className="text-xs font-bold font-mono tracking-widest text-zinc-500 text-center uppercase border-b border-zinc-900 pb-2 mb-2">Final</h4>
+                {bracket.final.map((match: any) => (
+                  <BracketMatchCard key={match.match_id} match={match} />
+                ))}
+              </div>
+              
+              {/* Champion Column */}
+              <div className="flex flex-col justify-center py-2 w-64">
+                <h4 className="text-xs font-bold font-mono tracking-widest text-zinc-500 text-center uppercase border-b border-zinc-900 pb-2 mb-2">Projected Champion</h4>
+                {bracket.final[0] && (() => {
+                  const fMatch = bracket.final[0];
+                  const homeBetter = fMatch.home_adv_prob >= fMatch.away_adv_prob;
+                  const champName = homeBetter ? fMatch.home_team : fMatch.away_team;
+                  const champProb = homeBetter ? fMatch.home_adv_prob : fMatch.away_adv_prob;
+                  return (
+                    <div className="glass-card p-6 rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-950/20 to-yellow-950/10 text-center shadow-lg relative overflow-hidden group py-10">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-yellow-300"></div>
+                      <Trophy className="w-12 h-12 text-amber-400 mx-auto mb-4 animate-bounce-slow" />
+                      <h5 className="text-lg font-extrabold text-white tracking-tight uppercase">{champName}</h5>
+                      <span className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase block mt-1">Projected Winner</span>
+                      <div className="mt-4 px-4 py-1.5 bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-full inline-block font-mono text-xs font-bold">
+                        {champProb?.toFixed(1)}% Championship Odds
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Rules Notice */}
       <div className="flex gap-3 p-4 bg-zinc-900/30 border border-zinc-800/60 rounded-2xl text-xs text-zinc-400 items-start">
@@ -589,17 +989,54 @@ function StandingsView({ standings }: { standings: GroupStandingsResponse }) {
   );
 }
 
+function BracketMatchCard({ match }: { match: any }) {
+  const homeBetter = match.home_adv_prob >= match.away_adv_prob;
+  return (
+    <div className="glass-card p-3 rounded-xl border border-zinc-800/80 bg-zinc-950/40 w-64 shadow-lg hover:border-cyan-500/30 transition-all duration-200">
+      <div className="text-[9px] font-mono text-zinc-500 mb-1.5 flex justify-between">
+        <span>Match {match.match_id}</span>
+        <span className="text-cyan-400/80">Slot Adv %</span>
+      </div>
+      <div className="space-y-1.5 text-xs">
+        {/* Home Team */}
+        <div className={`flex items-center justify-between p-1.5 rounded ${homeBetter ? 'bg-purple-950/20 text-purple-200 font-semibold' : 'text-zinc-400'}`}>
+          <div className="flex items-center gap-1.5 truncate">
+            <span className={`w-1.5 h-1.5 rounded-full ${homeBetter ? 'bg-purple-500' : 'bg-zinc-700'}`}></span>
+            <span className="truncate">{match.home_team}</span>
+            <span className="text-[9px] text-zinc-600 font-mono">({match.home_prob?.toFixed(0)}%)</span>
+          </div>
+          <span className="font-mono text-purple-400">{match.home_adv_prob?.toFixed(0)}%</span>
+        </div>
+        
+        {/* Away Team */}
+        <div className={`flex items-center justify-between p-1.5 rounded ${!homeBetter ? 'bg-cyan-950/20 text-cyan-200 font-semibold' : 'text-zinc-400'}`}>
+          <div className="flex items-center gap-1.5 truncate">
+            <span className={`w-1.5 h-1.5 rounded-full ${!homeBetter ? 'bg-cyan-500' : 'bg-zinc-700'}`}></span>
+            <span className="truncate">{match.away_team}</span>
+            <span className="text-[9px] text-zinc-600 font-mono">({match.away_prob?.toFixed(0)}%)</span>
+          </div>
+          <span className="font-mono text-cyan-400">{match.away_adv_prob?.toFixed(0)}%</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ============================================================================
    VIEW 3: H2H MATCH PREDICTOR & SHAP EXPLANATIONS
    ============================================================================ */
 function PredictorView({
   predictions,
   explanations,
-  players
+  players,
+  injuries,
+  activeInjuryPlayer
 }: {
   predictions: PredictionsResponse;
   explanations: ExplanationsResponse;
   players: PlayersResponse;
+  injuries: InjuryScenario[];
+  activeInjuryPlayer: string | null;
 }) {
   const [mode, setMode] = useState<'scheduled' | 'custom'>('scheduled');
 
@@ -612,56 +1049,106 @@ function PredictorView({
   const [customHome, setCustomHome] = useState<string>("Argentina");
   const [customAway, setCustomAway] = useState<string>("Portugal");
 
-  // Dynamic Custom Predictor Function
-  const getCustomPrediction = (home: string, away: string) => {
+  // State-driven async custom prediction
+  const [customResult, setCustomResult] = useState<any>(null);
+  const [customLoading, setCustomLoading] = useState(false);
+
+  // Client Poisson goals fallback calculator
+  const calculatePoissonLocal = (eloDiff: number, avgDiff: number) => {
+    let lambdaHome = 1.35 + (eloDiff / 500) + (avgDiff / 15);
+    let lambdaAway = 1.35 - (eloDiff / 500) - (avgDiff / 15);
+    lambdaHome = Math.max(0.3, Math.min(5.0, lambdaHome));
+    lambdaAway = Math.max(0.3, Math.min(5.0, lambdaAway));
+    
+    let bestProb = -1;
+    let bestScore = [0, 0];
+    
+    const factorial = (n: number): number => {
+      if (n <= 1) return 1;
+      return n * factorial(n - 1);
+    };
+    
+    for (let gh = 0; gh <= 5; gh++) {
+      const probH = Math.pow(lambdaHome, gh) * Math.exp(-lambdaHome) / factorial(gh);
+      for (let ga = 0; ga <= 5; ga++) {
+        const probA = Math.pow(lambdaAway, ga) * Math.exp(-lambdaAway) / factorial(ga);
+        const jointProb = probH * probA;
+        if (jointProb > bestProb) {
+          bestProb = jointProb;
+          bestScore = [gh, ga];
+        }
+      }
+    }
+    return { homeGoals: bestScore[0], awayGoals: bestScore[1], jointProb: bestProb };
+  };
+
+  // Client-side Custom Predictor Function (resilient offline fallback)
+  const getCustomPredictionLocal = (home: string, away: string) => {
     const homeStrength = players.team_strength.find(t => t.team.toLowerCase() === home.toLowerCase());
     const awayStrength = players.team_strength.find(t => t.team.toLowerCase() === away.toLowerCase());
     
     if (!homeStrength || !awayStrength) return null;
     
-    const eloHome = homeStrength.current_elo || 1600;
-    const eloAway = awayStrength.current_elo || 1600;
-    const eloDiff = eloHome - eloAway;
+    let eloHome = homeStrength.current_elo || 1600;
+    let eloAway = awayStrength.current_elo || 1600;
     
-    const avgHome = homeStrength.avg_impact || 50;
-    const avgAway = awayStrength.avg_impact || 50;
+    let avgHome = homeStrength.avg_impact || 50;
+    let avgAway = awayStrength.avg_impact || 50;
+    
+    // Adjust metrics if player what-if injury is active!
+    if (activeInjuryPlayer) {
+      const activeInjuryObj = injuries.find(i => i.Player === activeInjuryPlayer);
+      if (activeInjuryObj) {
+        const dropFactor = 1 - (activeInjuryObj["Strength Drop %"] / 100);
+        if (home.toLowerCase() === activeInjuryObj.Team.toLowerCase()) {
+          avgHome *= dropFactor;
+          eloHome *= dropFactor;
+        }
+        if (away.toLowerCase() === activeInjuryObj.Team.toLowerCase()) {
+          avgAway *= dropFactor;
+          eloAway *= dropFactor;
+        }
+      }
+    }
+
+    const eloDiff = eloHome - eloAway;
     const avgDiff = avgHome - avgAway;
     
-    // Calculate adjusted ELO difference
+    // Adjusted Elo difference
     const eloDiffAdj = eloDiff + (avgDiff * 12);
     
-    // Win probability using sigmoid
+    // Win probability
     const winProbHome = 1 / (1 + Math.pow(10, -eloDiffAdj / 400));
     
-    // Draw probability scales down with larger differences
+    // Draw probability
     const diffMagnitude = Math.abs(eloDiffAdj);
     const drawProb = Math.max(0.12, 0.28 - (diffMagnitude / 3000));
     
     const rawHomeProb = winProbHome * (1 - drawProb);
     const rawAwayProb = (1 - winProbHome) * (1 - drawProb);
     
-    // Normalize
     const total = rawHomeProb + rawAwayProb + drawProb;
     const home_win_prob = Number((rawHomeProb / total).toFixed(4));
     const away_win_prob = Number((rawAwayProb / total).toFixed(4));
     const draw_prob = Number((drawProb / total).toFixed(4));
     
-    let predicted_result: 'Home Win' | 'Draw' | 'Away Win' = 'Draw';
+    let predicted_result = 'Draw';
     if (home_win_prob > away_win_prob && home_win_prob > draw_prob) {
       predicted_result = 'Home Win';
     } else if (away_win_prob > home_win_prob && away_win_prob > draw_prob) {
       predicted_result = 'Away Win';
     }
+
+    const poisson = calculatePoissonLocal(eloDiff, avgDiff);
     
-    // Generate Custom Explainability Narratives
     const eloDiffNarrative = eloDiff > 0 
       ? `Higher Elo rating (+${Math.round(eloDiff)} pts) increases win chance by ${(Math.abs(eloDiff) / 20).toFixed(1)}%`
       : `Lower Elo rating (-${Math.round(Math.abs(eloDiff))} pts) decreases win chance by ${(Math.abs(eloDiff) / 20).toFixed(1)}%`;
-      
+       
     const squadQualityNarrative = avgDiff > 0
       ? `Superior player squad quality (+${avgDiff.toFixed(1)} average impact) increases win chance by ${(avgDiff * 2.5).toFixed(1)}%`
       : `Weaker player squad quality (-${Math.abs(avgDiff).toFixed(1)} average impact) decreases win chance by ${(Math.abs(avgDiff) * 2.5).toFixed(1)}%`;
-      
+       
     const formDiffHome = homeStrength.form_10 || 0.5;
     const formDiffAway = awayStrength.form_10 || 0.5;
     const formDiff = formDiffHome - formDiffAway;
@@ -674,11 +1161,65 @@ function PredictorView({
       away_win_prob,
       draw_prob,
       predicted_result,
-      confidence: Math.max(home_win_prob, away_win_prob, draw_prob),
+      predicted_home_goals: poisson.homeGoals,
+      predicted_away_goals: poisson.awayGoals,
+      poisson_joint_prob: poisson.jointProb,
+      confidence: calculateEntropyConfidence(home_win_prob, draw_prob, away_win_prob),
       elo_diff: eloDiff,
+      upset_alert: (eloDiff > 0 && away_win_prob > 0.30) || (eloDiff < 0 && home_win_prob > 0.30),
       reasons: [squadQualityNarrative, eloDiffNarrative, formNarrative]
     };
   };
+
+  const calculateEntropyConfidence = (p_home: number, p_draw: number, p_away: number): number => {
+    const total = p_home + p_draw + p_away;
+    if (total <= 0) return 0.33;
+    const p1 = p_home / total;
+    const p2 = p_draw / total;
+    const p3 = p_away / total;
+    let entropy = 0;
+    [p1, p2, p3].forEach(p => {
+      if (p > 0) entropy -= p * Math.log2(p);
+    });
+    return Math.max(0, Math.min(1, 1 - (entropy / Math.log2(3))));
+  };
+
+  useEffect(() => {
+    if (mode === 'custom') {
+      let active = true;
+      async function fetchCustom() {
+        setCustomLoading(true);
+        try {
+          // Wrap API post predict call
+          const response = await fetch('http://localhost:8000/api/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ home_team: customHome, away_team: customAway })
+          });
+          if (response.ok) {
+            const res = await response.json();
+            
+            // Adjust calculation on backend values locally if active injury scenario affects custom teams!
+            if (activeInjuryPlayer) {
+              const localAdjusted = getCustomPredictionLocal(customHome, customAway);
+              if (active && localAdjusted) setCustomResult(localAdjusted);
+            } else {
+              if (active) setCustomResult(res);
+            }
+          } else {
+            const localRes = getCustomPredictionLocal(customHome, customAway);
+            if (active) setCustomResult(localRes);
+          }
+        } catch (e) {
+          const localRes = getCustomPredictionLocal(customHome, customAway);
+          if (active) setCustomResult(localRes);
+        }
+        setCustomLoading(false);
+      }
+      fetchCustom();
+      return () => { active = false; };
+    }
+  }, [customHome, customAway, mode, activeInjuryPlayer]);
 
   // Find active prediction & explanation variables
   let homeTeam = "";
@@ -690,6 +1231,10 @@ function PredictorView({
   let eloDiffVal = 0;
   let reasons: string[] = [];
   let dateText = "Simulation Matchup";
+  let forecastScoreText = "";
+  let confidence = 0.33;
+  let showUpsetAlert = false;
+  let isMajorUpset = false;
 
   if (mode === 'scheduled') {
     const activeFixture = scheduledFixtures.find(f => f.fixture_id === selectedFixtureId) || scheduledFixtures[0];
@@ -702,6 +1247,14 @@ function PredictorView({
       predictedResult = activeFixture.predicted_result;
       eloDiffVal = activeFixture.elo_diff;
       dateText = activeFixture.date;
+      confidence = (activeFixture as any).confidence ?? 0.50;
+      showUpsetAlert = (activeFixture as any).upset_alert ?? false;
+      isMajorUpset = showUpsetAlert && (activeFixture.ensemble_away_win > 0.40 || activeFixture.away_win_prob > 0.40);
+
+      const hGoals = (activeFixture as any).predicted_home_goals ?? 1;
+      const aGoals = (activeFixture as any).predicted_away_goals ?? 1;
+      const jProb = (activeFixture as any).poisson_joint_prob ?? 0.15;
+      forecastScoreText = `ATLAS Forecast: ${hGoals} - ${aGoals} (${(jProb * 100).toFixed(0)}% joint prob)`;
 
       const activeExp = explanations.match_explanations.find(e => e.fixture_id === activeFixture.fixture_id);
       if (activeExp) {
@@ -709,17 +1262,24 @@ function PredictorView({
       }
     }
   } else {
-    // Custom match simulation
+    // Custom match prediction
     homeTeam = customHome;
     awayTeam = customAway;
-    const customResult = getCustomPrediction(customHome, customAway);
     if (customResult) {
       homeWinP = customResult.home_win_prob;
       drawP = customResult.draw_prob;
       awayWinP = customResult.away_win_prob;
       predictedResult = customResult.predicted_result;
       eloDiffVal = customResult.elo_diff;
+      confidence = customResult.confidence;
+      showUpsetAlert = customResult.upset_alert;
+      isMajorUpset = showUpsetAlert && customResult.away_win_prob > 0.40;
       reasons = customResult.reasons;
+
+      const hGoals = customResult.predicted_home_goals ?? 0;
+      const aGoals = customResult.predicted_away_goals ?? 0;
+      const jProb = customResult.poisson_joint_prob ?? 0.15;
+      forecastScoreText = `ATLAS Forecast: ${hGoals} - ${aGoals} (${(jProb * 100).toFixed(0)}% joint prob)`;
     }
   }
 
@@ -736,6 +1296,16 @@ function PredictorView({
     { subject: 'Elo Normalised', A: homeStr?.current_elo ? (homeStr.current_elo - 1400) / 10 : 50, B: awayStr?.current_elo ? (awayStr.current_elo - 1400) / 10 : 50, fullMark: 100 },
     { subject: 'Form Coefficient', A: (homeStr?.form_10 || 0.5) * 100, B: (awayStr?.form_10 || 0.5) * 100, fullMark: 100 },
   ];
+
+  // Active injury scenario checks
+  const activeInjuryObj = injuries.find(i => i.Player === activeInjuryPlayer);
+  const injuredTeam = activeInjuryObj?.Team;
+  const homeInjured = activeInjuryPlayer && homeTeam.toLowerCase() === injuredTeam?.toLowerCase();
+  const awayInjured = activeInjuryPlayer && awayTeam.toLowerCase() === injuredTeam?.toLowerCase();
+
+  // Confidence indicators
+  const confidenceLabel = confidence >= 0.50 ? "High Confidence" : confidence >= 0.25 ? "Medium Confidence" : "Low Confidence";
+  const confidenceColor = confidence >= 0.50 ? "text-emerald-400" : confidence >= 0.25 ? "text-amber-400" : "text-rose-400";
 
   return (
     <div className="space-y-6">
@@ -851,158 +1421,192 @@ function PredictorView({
       </div>
 
       {/* Main Predictor Report Display */}
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        {/* Probability display and team values */}
-        <div className="xl:col-span-3 flex flex-col gap-6">
-          <div className="glass-card p-8 rounded-2xl relative overflow-hidden flex flex-col justify-between">
-            <div className="absolute top-0 right-0 p-4 font-mono text-[9px] text-zinc-600 uppercase">
-              {dateText}
-            </div>
-
-            {/* Teams display */}
-            <div className="flex items-center justify-between py-6">
-              <div className="text-left w-5/12">
-                <h3 className="text-3xl font-extrabold text-white tracking-tight leading-none truncate">
-                  {homeTeam}
-                </h3>
-                <span className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase block mt-1">
-                  Home Team
-                </span>
-                <span className="text-xs text-zinc-400 block font-mono mt-2">
-                  Elo: {homeStr?.current_elo ? Math.round(homeStr.current_elo) : "N/A"}
-                </span>
+      {mode === 'custom' && customLoading ? (
+        <div className="glass-card p-12 rounded-2xl flex flex-col items-center justify-center">
+          <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mb-2" />
+          <p className="text-zinc-400 text-xs font-mono">Running H2H prediction engines...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+          {/* Probability display and team values */}
+          <div className="xl:col-span-3 flex flex-col gap-6">
+            <div className="glass-card p-8 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+              <div className="absolute top-0 right-0 p-4 font-mono text-[9px] text-zinc-600 uppercase">
+                {dateText}
               </div>
 
-              <div className="text-center shrink-0 w-2/12 font-bold text-zinc-500 font-mono text-lg">
-                VS
-              </div>
-
-              <div className="text-right w-5/12">
-                <h3 className="text-3xl font-extrabold text-white tracking-tight leading-none truncate">
-                  {awayTeam}
-                </h3>
-                <span className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase block mt-1">
-                  Away Team
-                </span>
-                <span className="text-xs text-zinc-400 block font-mono mt-2">
-                  Elo: {awayStr?.current_elo ? Math.round(awayStr.current_elo) : "N/A"}
-                </span>
-              </div>
-            </div>
-
-            {/* Segmented probability bar */}
-            <div className="space-y-2 mt-4">
-              <div className="flex h-7 rounded-lg overflow-hidden text-[10px] font-mono font-bold text-white text-center shadow-lg">
-                {/* Home Win */}
-                <div
-                  style={{ width: `${homeWinP * 100}%` }}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-500 flex items-center justify-center min-w-[20px] transition-all duration-500"
-                >
-                  {(homeWinP * 100).toFixed(0)}%
+              {/* Active Injury Banner */}
+              {(homeInjured || awayInjured) && (
+                <div className="mb-4 p-3 bg-rose-950/20 border border-rose-900/30 rounded-xl text-xs text-rose-300 flex items-center gap-2">
+                  <AlertCircle className="w-4.5 h-4.5 text-rose-500 shrink-0" />
+                  <div>
+                    <span className="font-semibold">{activeInjuryPlayer} is INJURED</span> — Team strength reduced. Model ratings adjusted. See bracket deltas in Injury Lab.
+                  </div>
                 </div>
-                {/* Draw */}
-                <div
-                  style={{ width: `${drawP * 100}%` }}
-                  className="bg-zinc-700/60 flex items-center justify-center min-w-[20px] transition-all duration-500 border-x border-zinc-800"
-                >
-                  {(drawP * 100).toFixed(0)}%
+              )}
+
+              {/* Teams display */}
+              <div className="flex items-center justify-between py-6">
+                <div className="text-left w-5/12">
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-none truncate">
+                    {homeTeam}
+                  </h3>
+                  <span className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase block mt-1">
+                    Home Team
+                  </span>
+                  <span className="text-xs text-zinc-400 block font-mono mt-2">
+                    Elo: {homeStr?.current_elo ? Math.round(homeStr.current_elo) : "1600"}
+                  </span>
                 </div>
-                {/* Away Win */}
-                <div
-                  style={{ width: `${awayWinP * 100}%` }}
-                  className="bg-gradient-to-r from-cyan-500 to-emerald-500 flex items-center justify-center min-w-[20px] transition-all duration-500"
-                >
-                  {(awayWinP * 100).toFixed(0)}%
+
+                <div className="text-center shrink-0 w-2/12 font-bold text-zinc-500 font-mono text-lg">
+                  VS
+                </div>
+
+                <div className="text-right w-5/12">
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-none truncate">
+                    {awayTeam}
+                  </h3>
+                  <span className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase block mt-1">
+                    Away Team
+                  </span>
+                  <span className="text-xs text-zinc-400 block font-mono mt-2">
+                    Elo: {awayStr?.current_elo ? Math.round(awayStr.current_elo) : "1600"}
+                  </span>
                 </div>
               </div>
 
-              {/* Labels for segmented bar */}
-              <div className="flex justify-between text-[10px] font-mono text-zinc-500 px-1">
-                <span>{homeTeam} Win</span>
-                <span>Draw</span>
-                <span>{awayTeam} Win</span>
+              {/* Segmented probability bar */}
+              <div className="space-y-2 mt-4">
+                <div className="flex h-7 rounded-lg overflow-hidden text-[10px] font-mono font-bold text-white text-center shadow-lg">
+                  {/* Home Win */}
+                  <div
+                    style={{ width: `${homeWinP * 100}%` }}
+                    className="bg-gradient-to-r from-purple-600 to-indigo-500 flex items-center justify-center min-w-[20px] transition-all duration-500"
+                  >
+                    {(homeWinP * 100).toFixed(0)}%
+                  </div>
+                  {/* Draw */}
+                  <div
+                    style={{ width: `${drawP * 100}%` }}
+                    className="bg-zinc-700/60 flex items-center justify-center min-w-[20px] transition-all duration-500 border-x border-zinc-800"
+                  >
+                    {(drawP * 100).toFixed(0)}%
+                  </div>
+                  {/* Away Win */}
+                  <div
+                    style={{ width: `${awayWinP * 100}%` }}
+                    className="bg-gradient-to-r from-cyan-500 to-emerald-500 flex items-center justify-center min-w-[20px] transition-all duration-500"
+                  >
+                    {(awayWinP * 100).toFixed(0)}%
+                  </div>
+                </div>
+
+                {/* Labels for segmented bar */}
+                <div className="flex justify-between text-[10px] font-mono text-zinc-500 px-1">
+                  <span>{homeTeam} Win</span>
+                  <span>Draw</span>
+                  <span>{awayTeam} Win</span>
+                </div>
+              </div>
+
+              {/* Verdict statement */}
+              <div className="mt-8 pt-6 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-mono uppercase text-zinc-500 block">
+                      Model Prediction Verdict
+                    </span>
+                    {showUpsetAlert && (
+                      <span className={`px-2 py-0.5 text-[8px] font-bold uppercase rounded-full animate-pulse ${
+                        isMajorUpset 
+                          ? 'bg-rose-950/40 text-rose-400 border border-rose-800/50' 
+                          : 'bg-amber-950/40 text-amber-400 border border-amber-800/50'
+                      }`}>
+                        {isMajorUpset ? 'Major Upset Alert' : 'Upset Alert'}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-base sm:text-lg font-bold text-white block">
+                    {predictedResult === "Home Win" && `${homeTeam} win predicted`}
+                    {predictedResult === "Away Win" && `${awayTeam} win predicted`}
+                    {predictedResult === "Draw" && "Draw match predicted"}
+                  </span>
+                  <span className="text-xs text-cyan-400/90 font-mono font-semibold block mt-1">
+                    {forecastScoreText}
+                  </span>
+                </div>
+                <div className="px-4 py-2 bg-cyan-950/20 border border-cyan-800/40 rounded-xl text-center min-w-[120px]">
+                  <span className="text-[9px] font-mono uppercase text-zinc-500 block">
+                    Confidence Score
+                  </span>
+                  <span className={`text-[10px] font-bold block mt-0.5 ${confidenceColor}`}>
+                    {confidenceLabel}
+                  </span>
+                  <span className="text-sm font-extrabold text-cyan-400 font-mono">
+                    {(confidence * 100).toFixed(0)}%
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Verdict statement */}
-            <div className="mt-8 pt-6 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <span className="text-[10px] font-mono uppercase text-zinc-500 block">
-                  Model Prediction Verdict
-                </span>
-                <span className="text-lg font-bold text-white">
-                  {predictedResult === "Home Win" && `${homeTeam} win predicted`}
-                  {predictedResult === "Away Win" && `${awayTeam} win predicted`}
-                  {predictedResult === "Draw" && "Draw match predicted"}
-                </span>
-              </div>
-              <div className="px-4 py-2 bg-cyan-950/20 border border-cyan-800/40 rounded-xl text-center">
-                <span className="text-[9px] font-mono uppercase text-zinc-500 block">
-                  Confidence Score
-                </span>
-                <span className="text-sm font-extrabold text-cyan-400 font-mono">
-                  {(homeWinP > awayWinP && homeWinP > drawP ? homeWinP : awayWinP > homeWinP && awayWinP > drawP ? awayWinP : drawP).toFixed(1)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Explainability reasons */}
-          <div className="glass-card p-6 rounded-2xl">
-            <h4 className="text-base font-bold text-white flex items-center gap-2 mb-4">
-              <Brain className="w-5 h-5 text-purple-400" /> SHAP Feature Contribution Waterfall
-            </h4>
-            {reasons.length > 0 ? (
-              <div className="space-y-3">
-                {reasons.map((reason, index) => {
-                  const isPositive = reason.includes("increases");
-                  return (
-                    <div
-                      key={index}
-                      className={`p-4 rounded-xl flex items-center gap-3 border text-xs ${
-                        isPositive
-                          ? "bg-emerald-950/15 border-emerald-900/30 text-emerald-300"
-                          : "bg-rose-950/15 border-rose-900/30 text-rose-300"
-                      }`}
-                    >
+            {/* Explainability reasons */}
+            <div className="glass-card p-6 rounded-2xl">
+              <h4 className="text-base font-bold text-white flex items-center gap-2 mb-4">
+                <Brain className="w-5 h-5 text-purple-400" /> SHAP Feature Contribution Waterfall
+              </h4>
+              {reasons.length > 0 ? (
+                <div className="space-y-3">
+                  {reasons.map((reason, index) => {
+                    const isPositive = reason.includes("increases");
+                    return (
                       <div
-                        className={`w-2.5 h-2.5 rounded-full ${
-                          isPositive ? "bg-emerald-500 animate-pulse" : "bg-rose-500"
+                        key={index}
+                        className={`p-4 rounded-xl flex items-center gap-3 border text-xs ${
+                          isPositive
+                            ? "bg-emerald-950/15 border-emerald-900/30 text-emerald-300"
+                            : "bg-rose-950/15 border-rose-900/30 text-rose-300"
                         }`}
-                      ></div>
-                      <p>{reason}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-zinc-500 text-xs py-4 text-center">
-                Select a match fixture or run custom sim to inspect shap narrative logs.
-              </div>
-            )}
+                      >
+                        <div
+                          className={`w-2.5 h-2.5 rounded-full ${
+                            isPositive ? "bg-emerald-500 animate-pulse" : "bg-rose-500"
+                          }`}
+                        ></div>
+                        <p>{reason}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-zinc-500 text-xs py-4 text-center">
+                  Select a match fixture or run custom sim to inspect shap narrative logs.
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Radar Compare Chart */}
-        <div className="xl:col-span-2 glass-card p-6 rounded-2xl flex flex-col">
-          <div className="mb-4">
-            <h4 className="text-base font-bold text-white">Attribute Heatmap Comparison</h4>
-            <p className="text-xs text-zinc-400">Comparing tactical metrics from player squad values.</p>
-          </div>
-          <div className="flex-1 w-full h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                <PolarGrid stroke="#27272a" />
-                <PolarAngleAxis dataKey="subject" stroke="#a1a1aa" fontSize={9} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#3f3f46" fontSize={8} />
-                <Radar name={homeTeam} dataKey="A" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.25} />
-                <Radar name={awayTeam} dataKey="B" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.25} />
-                <Legend wrapperStyle={{ fontSize: '10px' }} />
-              </RadarChart>
-            </ResponsiveContainer>
+          {/* Radar Compare Chart */}
+          <div className="xl:col-span-2 glass-card p-6 rounded-2xl flex flex-col">
+            <div className="mb-4">
+              <h4 className="text-base font-bold text-white">Attribute Heatmap Comparison</h4>
+              <p className="text-xs text-zinc-400">Comparing tactical metrics from player squad values.</p>
+            </div>
+            <div className="flex-1 w-full h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                  <PolarGrid stroke="#27272a" />
+                  <PolarAngleAxis dataKey="subject" stroke="#a1a1aa" fontSize={9} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#3f3f46" fontSize={8} />
+                  <Radar name={homeTeam} dataKey="A" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.25} />
+                  <Radar name={awayTeam} dataKey="B" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.25} />
+                  <Legend wrapperStyle={{ fontSize: '10px' }} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -1014,7 +1618,6 @@ function PlayersView({ players }: { players: PlayersResponse }) {
   const [searchQuery, setSearchQuery] = useState("");
   const top50 = players.top50 || [];
 
-  // Filter players
   const filteredPlayers = top50.filter(
     player =>
       player.player_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1104,27 +1707,128 @@ function PlayersView({ players }: { players: PlayersResponse }) {
    ============================================================================ */
 function WhatIfView({
   injuries,
-  players
+  players,
+  simulations,
+  activeInjuryPlayer,
+  setActiveInjuryPlayer
 }: {
   injuries: InjuryScenario[];
   players: PlayersResponse;
+  simulations: SimulationsResponse;
+  activeInjuryPlayer: string | null;
+  setActiveInjuryPlayer: (val: string | null) => void;
 }) {
   const [selectedPlayer, setSelectedPlayer] = useState<string>(injuries[0]?.Player || "Mohamed Salah");
-
   const activeInjury = injuries.find(i => i.Player === selectedPlayer) || injuries[0];
 
   // Get active player detailed stats
   const activePlayerStats = players.top50.find(p => p.player_name === selectedPlayer);
 
+  // States for what-if async simulation results
+  const [whatIfResult, setWhatIfResult] = useState<any>(null);
+  const [whatIfLoading, setWhatIfLoading] = useState<boolean>(false);
+
+  // Fallback calculation helper (approximates deltas locally if backend simulator is offline)
+  const computeLocalWhatIf = (injury: InjuryScenario) => {
+    const baseTeamRow = simulations?.results.find(r => r.Team.toLowerCase() === injury.Team.toLowerCase());
+    if (!baseTeamRow) return null;
+    
+    const dropPct = injury["Strength Drop %"];
+    const scaleFactor = 1 - (dropPct / 100);
+    
+    return {
+      team: injury.Team,
+      strength_drop_pct: dropPct,
+      player_name: injury.Player,
+      isFallback: true,
+      before: {
+        champion: baseTeamRow["Champion %"],
+        finalist: baseTeamRow["Finalist %"],
+        semi_final: baseTeamRow["Semi-Final %"],
+        quarter_final: baseTeamRow["Quarter-Final %"],
+        r16: baseTeamRow["Round of 16 %"]
+      },
+      after: {
+        champion: baseTeamRow["Champion %"] * scaleFactor * scaleFactor,
+        finalist: baseTeamRow["Finalist %"] * scaleFactor,
+        semi_final: baseTeamRow["Semi-Final %"] * (1 - (dropPct / 150)),
+        quarter_final: baseTeamRow["Quarter-Final %"] * (1 - (dropPct / 200)),
+        r16: baseTeamRow["Round of 16 %"] * (1 - (dropPct / 300))
+      },
+      narrative: `${injury.Player}'s absence reduces ${injury.Team}'s squad strength by ${dropPct.toFixed(1)}%. (Approximated locally due to service offline)`
+    };
+  };
+
+  useEffect(() => {
+    let active = true;
+    async function runSimulation() {
+      if (!activeInjury) return;
+      setWhatIfLoading(true);
+      try {
+        const response = await runWhatIfSimulation(activeInjury.Team, activeInjury["Strength Drop %"], selectedPlayer);
+        if (active) {
+          if (response && response.status === "success") {
+            setWhatIfResult(response.comparison);
+          } else {
+            setWhatIfResult(computeLocalWhatIf(activeInjury));
+          }
+          setWhatIfLoading(false);
+        }
+      } catch (e) {
+        if (active) {
+          setWhatIfResult(computeLocalWhatIf(activeInjury));
+          setWhatIfLoading(false);
+        }
+      }
+    }
+    runSimulation();
+    return () => { active = false; };
+  }, [selectedPlayer, activeInjury]);
+
+  const isScenarioActive = activeInjuryPlayer === selectedPlayer;
+  const toggleScenario = () => {
+    if (isScenarioActive) {
+      setActiveInjuryPlayer(null);
+    } else {
+      setActiveInjuryPlayer(selectedPlayer);
+    }
+  };
+
+  // Recharts Bar Data
+  const chartData = whatIfResult ? [
+    { name: 'R16', Baseline: whatIfResult.before.r16, 'With Injury': whatIfResult.after.r16 },
+    { name: 'QF', Baseline: whatIfResult.before.quarter_final, 'With Injury': whatIfResult.after.quarter_final },
+    { name: 'SF', Baseline: whatIfResult.before.semi_final, 'With Injury': whatIfResult.after.semi_final },
+    { name: 'Final', Baseline: whatIfResult.before.finalist, 'With Injury': whatIfResult.after.finalist },
+    { name: 'Champ', Baseline: whatIfResult.before.champion, 'With Injury': whatIfResult.after.champion },
+  ] : [];
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <Activity className="w-6 h-6 text-emerald-400" /> Injury What-If Lab
-        </h2>
-        <p className="text-sm text-zinc-400">
-          Simulate the impact on a country's team strength if their key player is injured.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            <Activity className="w-6 h-6 text-emerald-400" /> Injury What-If Lab
+          </h2>
+          <p className="text-sm text-zinc-400">
+            Simulate the impact on a country's team strength if their key player is injured.
+          </p>
+        </div>
+
+        {/* Activate Scenario Button */}
+        {activeInjury && (
+          <button
+            onClick={toggleScenario}
+            className={`px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-2 cursor-pointer ${
+              isScenarioActive 
+                ? 'bg-rose-950/20 text-rose-400 border-rose-800/40 hover:bg-rose-950/40 shadow-sm shadow-rose-950/30' 
+                : 'bg-zinc-900/60 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50'
+            }`}
+          >
+            <AlertCircle className={`w-4 h-4 ${isScenarioActive ? 'text-rose-400 animate-pulse' : 'text-zinc-500'}`} />
+            {isScenarioActive ? `${selectedPlayer} Active Scenario INJURED` : `Mark ${selectedPlayer} Injured`}
+          </button>
+        )}
       </div>
 
       {/* Selector Card */}
@@ -1154,7 +1858,7 @@ function WhatIfView({
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
           {/* Simulation stats display */}
           <div className="xl:col-span-3 flex flex-col gap-6">
-            <div className="glass-card p-8 rounded-2xl flex flex-col justify-between h-full relative overflow-hidden group">
+            <div className="glass-card p-8 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
               <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 opacity-5 group-hover:scale-110 transition duration-300">
                 <Activity className="w-36 h-36 text-white" />
               </div>
@@ -1206,12 +1910,35 @@ function WhatIfView({
                 </div>
               </div>
             </div>
+
+            {/* Narrative Card */}
+            <div className="glass-card p-6 rounded-2xl border border-rose-500/20 bg-gradient-to-r from-rose-950/20 to-zinc-900/30 relative overflow-hidden group">
+              <h4 className="text-xs font-bold text-rose-400 mb-2 font-mono uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-rose-400" /> Narrative Impact Explanation
+                {whatIfResult?.isFallback && (
+                  <span className="px-2 py-0.5 text-[8px] bg-amber-500/10 border border-amber-800/30 text-amber-400 rounded font-mono normal-case">
+                    ⚠️ Offline Fallback
+                  </span>
+                )}
+              </h4>
+              
+              {whatIfLoading ? (
+                <div className="flex items-center gap-2 text-zinc-400 py-3 text-xs font-mono">
+                  <Loader2 className="w-4 h-4 animate-spin text-rose-400" />
+                  <span>Rerunning Monte Carlo simulations...</span>
+                </div>
+              ) : (
+                <p className="text-sm text-zinc-300 leading-relaxed font-sans">
+                  {whatIfResult?.narrative}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Player profile stats */}
           <div className="xl:col-span-2 glass-card p-6 rounded-2xl flex flex-col justify-between">
             <div>
-              <h4 className="text-base font-bold text-white mb-1">Key Player Attribute card</h4>
+              <h4 className="text-base font-bold text-white mb-1">Key Player Attribute Card</h4>
               <p className="text-xs text-zinc-400 mb-6">Tactical breakdown for the selected squad star.</p>
 
               {activePlayerStats ? (
@@ -1264,6 +1991,45 @@ function WhatIfView({
               Absence of this player alters the team's features inside the ATLAS classifier model. Squad features such as expected goals per match drop, forcing the model to calculate a lower probability of victory during simulated brackets.
             </div>
           </div>
+        </div>
+      )}
+
+      {/* progression delta comparison bar chart */}
+      {whatIfResult && (
+        <div className="glass-card p-6 rounded-2xl">
+          <div className="mb-4">
+            <h4 className="text-base font-bold text-white">Progression Probability Delta (Before vs After)</h4>
+            <p className="text-xs text-zinc-400">Comparing survival rate probabilities across tournament rounds.</p>
+          </div>
+          {whatIfLoading ? (
+            <div className="h-64 flex items-center justify-center">
+              <Loader2 className="w-6 h-6 text-rose-500 animate-spin" />
+            </div>
+          ) : (
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <XAxis dataKey="name" stroke="#71717a" fontSize={11} />
+                  <YAxis stroke="#71717a" fontSize={11} unit="%" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#09090b",
+                      borderColor: "#27272a",
+                      color: "#f4f4f7",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                  <Bar dataKey="Baseline" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="With Injury" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
       )}
     </div>

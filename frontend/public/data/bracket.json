@@ -1,0 +1,291 @@
+{
+  "r32": [
+    {
+      "match_id": 1,
+      "home_team": "Argentina",
+      "away_team": "Turkey",
+      "home_prob": 99.09,
+      "away_prob": 85.87,
+      "home_adv_prob": 71.79,
+      "away_adv_prob": 49.4
+    },
+    {
+      "match_id": 2,
+      "home_team": "Belgium",
+      "away_team": "Canada",
+      "home_prob": 98.86,
+      "away_prob": 97.16,
+      "home_adv_prob": 48.59,
+      "away_adv_prob": 45.69
+    },
+    {
+      "match_id": 3,
+      "home_team": "Brazil",
+      "away_team": "Spain",
+      "home_prob": 97.24,
+      "away_prob": 97.1,
+      "home_adv_prob": 57.4,
+      "away_adv_prob": 76.72
+    },
+    {
+      "match_id": 4,
+      "home_team": "Colombia",
+      "away_team": "Croatia",
+      "home_prob": 89.45,
+      "away_prob": 80.26,
+      "home_adv_prob": 53.0,
+      "away_adv_prob": 44.79
+    },
+    {
+      "match_id": 5,
+      "home_team": "Germany",
+      "away_team": "South Korea",
+      "home_prob": 97.49,
+      "away_prob": 78.29,
+      "home_adv_prob": 60.27,
+      "away_adv_prob": 36.45
+    },
+    {
+      "match_id": 6,
+      "home_team": "France",
+      "away_team": "Sweden",
+      "home_prob": 99.25,
+      "away_prob": 79.04,
+      "home_adv_prob": 70.85,
+      "away_adv_prob": 26.88
+    },
+    {
+      "match_id": 7,
+      "home_team": "USA",
+      "away_team": "Algeria",
+      "home_prob": 93.81,
+      "away_prob": 68.61,
+      "home_adv_prob": 43.52,
+      "away_adv_prob": 29.03
+    },
+    {
+      "match_id": 8,
+      "home_team": "Switzerland",
+      "away_team": "New Zealand",
+      "home_prob": 99.43,
+      "away_prob": 55.2,
+      "home_adv_prob": 51.59,
+      "away_adv_prob": 17.23
+    },
+    {
+      "match_id": 9,
+      "home_team": "Uruguay",
+      "away_team": "Scotland",
+      "home_prob": 88.12,
+      "away_prob": 83.51,
+      "home_adv_prob": 45.82,
+      "away_adv_prob": 33.21
+    },
+    {
+      "match_id": 10,
+      "home_team": "England",
+      "away_team": "Portugal",
+      "home_prob": 98.56,
+      "away_prob": 93.31,
+      "home_adv_prob": 65.64,
+      "away_adv_prob": 54.44
+    },
+    {
+      "match_id": 11,
+      "home_team": "Mexico",
+      "away_team": "Ecuador",
+      "home_prob": 99.69,
+      "away_prob": 77.92,
+      "home_adv_prob": 61.73,
+      "away_adv_prob": 46.37
+    },
+    {
+      "match_id": 12,
+      "home_team": "Netherlands",
+      "away_team": "Senegal",
+      "home_prob": 93.33,
+      "away_prob": 63.31,
+      "home_adv_prob": 56.11,
+      "away_adv_prob": 31.17
+    },
+    {
+      "match_id": 13,
+      "home_team": "Austria",
+      "away_team": "Panama",
+      "home_prob": 68.24,
+      "away_prob": 66.29,
+      "home_adv_prob": 30.71,
+      "away_adv_prob": 25.33
+    },
+    {
+      "match_id": 14,
+      "home_team": "Ivory Coast",
+      "away_team": "Japan",
+      "home_prob": 69.23,
+      "away_prob": 76.52,
+      "home_adv_prob": 24.72,
+      "away_adv_prob": 45.13
+    },
+    {
+      "match_id": 15,
+      "home_team": "Norway",
+      "away_team": "Paraguay",
+      "home_prob": 68.72,
+      "away_prob": 58.96,
+      "home_adv_prob": 36.08,
+      "away_adv_prob": 29.39
+    },
+    {
+      "match_id": 16,
+      "home_team": "Egypt",
+      "away_team": "Morocco",
+      "home_prob": 58.67,
+      "away_prob": 64.75,
+      "home_adv_prob": 22.5,
+      "away_adv_prob": 39.3
+    }
+  ],
+  "r16": [
+    {
+      "match_id": 17,
+      "home_team": "Argentina",
+      "away_team": "Belgium",
+      "home_prob": 71.79,
+      "away_prob": 48.59,
+      "home_adv_prob": 49.81,
+      "away_adv_prob": 22.0
+    },
+    {
+      "match_id": 18,
+      "home_team": "Spain",
+      "away_team": "Colombia",
+      "home_prob": 76.72,
+      "away_prob": 53.0,
+      "home_adv_prob": 58.79,
+      "away_adv_prob": 28.51
+    },
+    {
+      "match_id": 19,
+      "home_team": "Germany",
+      "away_team": "France",
+      "home_prob": 60.27,
+      "away_prob": 70.85,
+      "home_adv_prob": 34.89,
+      "away_adv_prob": 48.48
+    },
+    {
+      "match_id": 20,
+      "home_team": "USA",
+      "away_team": "Switzerland",
+      "home_prob": 43.52,
+      "away_prob": 51.59,
+      "home_adv_prob": 18.78,
+      "away_adv_prob": 23.72
+    },
+    {
+      "match_id": 21,
+      "home_team": "Uruguay",
+      "away_team": "England",
+      "home_prob": 45.82,
+      "away_prob": 65.64,
+      "home_adv_prob": 20.85,
+      "away_adv_prob": 40.94
+    },
+    {
+      "match_id": 22,
+      "home_team": "Mexico",
+      "away_team": "Netherlands",
+      "home_prob": 61.73,
+      "away_prob": 56.11,
+      "home_adv_prob": 35.86,
+      "away_adv_prob": 31.47
+    },
+    {
+      "match_id": 23,
+      "home_team": "Austria",
+      "away_team": "Japan",
+      "home_prob": 30.71,
+      "away_prob": 45.13,
+      "home_adv_prob": 12.51,
+      "away_adv_prob": 24.81
+    },
+    {
+      "match_id": 24,
+      "home_team": "Norway",
+      "away_team": "Morocco",
+      "home_prob": 36.08,
+      "away_prob": 39.3,
+      "home_adv_prob": 18.05,
+      "away_adv_prob": 22.68
+    }
+  ],
+  "qf": [
+    {
+      "match_id": 25,
+      "home_team": "Argentina",
+      "away_team": "Spain",
+      "home_prob": 49.81,
+      "away_prob": 58.79,
+      "home_adv_prob": 33.03,
+      "away_adv_prob": 43.27
+    },
+    {
+      "match_id": 26,
+      "home_team": "France",
+      "away_team": "Switzerland",
+      "home_prob": 48.48,
+      "away_prob": 23.72,
+      "home_adv_prob": 31.99,
+      "away_adv_prob": 9.41
+    },
+    {
+      "match_id": 27,
+      "home_team": "England",
+      "away_team": "Mexico",
+      "home_prob": 40.94,
+      "away_prob": 35.86,
+      "home_adv_prob": 24.83,
+      "away_adv_prob": 19.26
+    },
+    {
+      "match_id": 28,
+      "home_team": "Japan",
+      "away_team": "Morocco",
+      "home_prob": 24.81,
+      "away_prob": 22.68,
+      "home_adv_prob": 12.75,
+      "away_adv_prob": 12.01
+    }
+  ],
+  "sf": [
+    {
+      "match_id": 29,
+      "home_team": "Spain",
+      "away_team": "France",
+      "home_prob": 43.27,
+      "away_prob": 31.99,
+      "home_adv_prob": 31.29,
+      "away_adv_prob": 20.21
+    },
+    {
+      "match_id": 30,
+      "home_team": "England",
+      "away_team": "Japan",
+      "home_prob": 24.83,
+      "away_prob": 12.75,
+      "home_adv_prob": 14.14,
+      "away_adv_prob": 6.23
+    }
+  ],
+  "final": [
+    {
+      "match_id": 31,
+      "home_team": "Spain",
+      "away_team": "England",
+      "home_prob": 31.29,
+      "away_prob": 14.14,
+      "home_adv_prob": 21.61,
+      "away_adv_prob": 7.21
+    }
+  ]
+}
