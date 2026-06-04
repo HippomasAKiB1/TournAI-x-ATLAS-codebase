@@ -1,0 +1,82 @@
+[
+  {
+    "Player": "Mohamed Salah",
+    "Team": "Egypt",
+    "Impact Score": 100.0,
+    "Team Avg (with)": 55.58,
+    "Team Avg (without)": 53.46,
+    "Strength Drop %": 3.81
+  },
+  {
+    "Player": "Teboho Mokoena",
+    "Team": "South Africa",
+    "Impact Score": 98.6,
+    "Team Avg (with)": 59.22,
+    "Team Avg (without)": 57.26,
+    "Strength Drop %": 3.32
+  },
+  {
+    "Player": "Jordan Ayew",
+    "Team": "Ghana",
+    "Impact Score": 98.0,
+    "Team Avg (with)": 42.04,
+    "Team Avg (without)": 38.93,
+    "Strength Drop %": 7.39
+  },
+  {
+    "Player": "Bernardo Mota Veiga de Carvalho e Silva",
+    "Team": "Portugal",
+    "Impact Score": 97.4,
+    "Team Avg (with)": 58.51,
+    "Team Avg (without)": 56.82,
+    "Strength Drop %": 2.89
+  },
+  {
+    "Player": "José Salomón Rondón Giménez",
+    "Team": "Venezuela",
+    "Impact Score": 95.7,
+    "Team Avg (with)": 48.45,
+    "Team Avg (without)": 46.2,
+    "Strength Drop %": 4.64
+  },
+  {
+    "Player": "Lionel Andrés Messi Cuccittini",
+    "Team": "Argentina",
+    "Impact Score": 95.3,
+    "Team Avg (with)": 55.7,
+    "Team Avg (without)": 53.98,
+    "Strength Drop %": 3.09
+  },
+  {
+    "Player": "Mostafa Mohamed Ahmed Abdallah",
+    "Team": "Egypt",
+    "Impact Score": 95.1,
+    "Team Avg (with)": 55.58,
+    "Team Avg (without)": 53.7,
+    "Strength Drop %": 3.39
+  },
+  {
+    "Player": "Cristiano Ronaldo dos Santos Aveiro",
+    "Team": "Portugal",
+    "Impact Score": 94.1,
+    "Team Avg (with)": 58.51,
+    "Team Avg (without)": 56.97,
+    "Strength Drop %": 2.64
+  },
+  {
+    "Player": "Kai Havertz",
+    "Team": "Germany",
+    "Impact Score": 92.9,
+    "Team Avg (with)": 52.07,
+    "Team Avg (without)": 50.22,
+    "Strength Drop %": 3.56
+  },
+  {
+    "Player": "Bruno Miguel Borges Fernandes",
+    "Team": "Portugal",
+    "Impact Score": 92.1,
+    "Team Avg (with)": 58.51,
+    "Team Avg (without)": 57.05,
+    "Strength Drop %": 2.5
+  }
+]
