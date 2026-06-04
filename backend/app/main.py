@@ -19,6 +19,16 @@ from backend.app.db.session import engine, Base, get_db, SessionLocal
 from backend.app.db import crud, schemas, auth
 from backend.app.db.models import User, Match, UserPrediction
 
+# Celery Dual-Mode Configuration
+USE_CELERY = os.getenv("USE_CELERY", "false").lower() == "true"
+if USE_CELERY:
+    try:
+        from backend.app.tasks.celery import run_adaptive_pipeline_task
+        print("Celery backend queue enabled.")
+    except ImportError:
+        print("WARNING: Celery tasks module not found. Falling back to BackgroundTasks.")
+        USE_CELERY = False
+
 # Create tables if they do not exist
 Base.metadata.create_all(bind=engine)
 
@@ -261,15 +271,24 @@ async def ingest_match(
         db.add(match)
         db.commit()
         
-    # Trigger trigger_adaptive_update in a background task
-    background_tasks.add_task(
-        trigger_adaptive_update,
-        payload.home_team,
-        payload.away_team,
-        payload.home_score,
-        payload.away_score,
-        payload.stage
-    )
+    # Trigger trigger_adaptive_update in a background task or Celery queue
+    if USE_CELERY:
+        run_adaptive_pipeline_task.delay(
+            payload.home_team,
+            payload.away_team,
+            payload.home_score,
+            payload.away_score,
+            payload.stage
+        )
+    else:
+        background_tasks.add_task(
+            trigger_adaptive_update,
+            payload.home_team,
+            payload.away_team,
+            payload.home_score,
+            payload.away_score,
+            payload.stage
+        )
     
     return {
         "status": "update_queued",
