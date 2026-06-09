@@ -39,11 +39,38 @@ def append_match_to_training_set(
             ((df_fixtures['home_team'].str.lower() == away_team.lower()) & (df_fixtures['away_team'].str.lower() == home_team.lower()))
         ]
         
-    if len(fixture_row) == 0:
-        raise ValueError(f"No fixture found in wc2026_fixture_features.csv for {home_team} vs {away_team}")
-        
-    feat = fixture_row.iloc[0]
     next_match_id = int(df_train['match_id'].max() + 1)
+    
+    if len(fixture_row) == 0:
+        # Fallback features for knockout matches between teams that didn't play in the group stage
+        fallback_feat = {
+            'date': '2026-06-30',
+            'city': 'Knockout Host Venue',
+            'home_host_nation': 0,
+            'away_host_nation': 0,
+            'home_current_elo': 1600.0,
+            'away_current_elo': 1600.0,
+            'elo_diff': 0.0,
+            'home_elo_win_prob': 0.5,
+            'home_form_10': 0.5,
+            'away_form_10': 0.5,
+            'form_diff': 0.0,
+            'home_goals_scored_form10': 3.0,
+            'home_goals_conceded_form10': 2.0,
+            'away_goals_scored_form10': 3.0,
+            'home_wc_appearances': 5.0,
+            'away_wc_appearances': 5.0,
+            'home_wc_wins': 0.0,
+            'away_wc_wins': 0.0,
+            'home_wc_finals': 0.0,
+            'away_wc_finals': 0.0,
+            'home_wc_semis': 0.0,
+            'away_wc_semis': 0.0,
+            'fixture_id': next_match_id
+        }
+        feat = pd.Series(fallback_feat)
+    else:
+        feat = fixture_row.iloc[0]
     
     # 1. Home perspective row
     home_result = 'Win' if home_score > away_score else 'Loss' if home_score < away_score else 'Draw'
