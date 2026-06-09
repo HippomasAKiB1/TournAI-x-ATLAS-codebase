@@ -79,6 +79,40 @@ def trigger_adaptive_update(
     print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
 
+    # Query completed match scores and knockout winners from DB
+    completed_group_scores = {}
+    completed_knockouts = {}
+    db_knockout_scores = {}
+    
+    try:
+        from backend.app.db.session import SessionLocal
+        from backend.app.db.models import Match
+        if SessionLocal is not None and Match is not None:
+            db = SessionLocal()
+            try:
+                completed_matches = db.query(Match).filter(Match.status == "completed").all()
+                for m in completed_matches:
+                    h = m.home_team
+                    a = m.away_team
+                    stg = m.stage or "Group Stage"
+                    if stg == "Group Stage":
+                        if m.home_score is not None and m.away_score is not None:
+                            completed_group_scores[(h.lower(), a.lower())] = (int(m.home_score), int(m.away_score))
+                    else:
+                        if m.home_score is not None and m.away_score is not None:
+                            winner = h if m.home_score > m.away_score else a
+                            completed_knockouts[(h.lower(), a.lower(), stg.lower())] = winner
+                            completed_knockouts[(a.lower(), h.lower(), stg.lower())] = winner
+                            db_knockout_scores[(h.lower(), a.lower(), stg.lower())] = (m.home_score, m.away_score)
+                            db_knockout_scores[(a.lower(), h.lower(), stg.lower())] = (m.away_score, m.home_score)
+                print(f"  Loaded {len(completed_group_scores)} completed group scores and {len(completed_knockouts)//2} knockout winners from DB.")
+            except Exception as e:
+                print(f"  [WARN] Failed to query database for completed matches: {e}")
+            finally:
+                db.close()
+    except Exception as e:
+        print(f"  [WARN] Database models not available, using offline defaults: {e}")
+
     # 1. UPDATE TEAM ELO RATINGS
     print("\n[1/7] Updating Team Elo Ratings...")
     team_strength_path = DEFAULT_DATA_DIR / "wc2026_team_strength.csv"
@@ -181,13 +215,46 @@ def trigger_adaptive_update(
     
     # Re-calc standings
     df_fixtures = load_wc2026_fixtures()
-    # Update standings with the actual score if it was group stage
-    for idx, row in df_fixtures.iterrows():
-        if (row['home_team'].lower() == home_team.lower() and row['away_team'].lower() == away_team.lower()) or \
-           (row['home_team'].lower() == away_team.lower() and row['away_team'].lower() == home_team.lower()):
-            df_fixtures.loc[idx, 'home_score'] = home_score
-            df_fixtures.loc[idx, 'away_score'] = away_score
-            df_fixtures.loc[idx, 'result_available'] = 1
+    
+    # Sync all completed group stage matches from DB to the CSV
+    try:
+        from backend.app.db.session import SessionLocal
+        from backend.app.db.models import Match
+        if SessionLocal is not None and Match is not None:
+            db = SessionLocal()
+            try:
+                db_completed = db.query(Match).filter(Match.status == "completed", Match.stage == "Group Stage").all()
+                for m in db_completed:
+                    mask = (
+                        ((df_fixtures['home_team'].str.lower() == m.home_team.lower()) & (df_fixtures['away_team'].str.lower() == m.away_team.lower())) |
+                        ((df_fixtures['home_team'].str.lower() == m.away_team.lower()) & (df_fixtures['away_team'].str.lower() == m.home_team.lower()))
+                    )
+                    if mask.any():
+                        idx = df_fixtures[mask].index[0]
+                        h_csv = df_fixtures.loc[idx, 'home_team']
+                        if h_csv.lower() == m.home_team.lower():
+                            df_fixtures.loc[idx, 'home_score'] = m.home_score
+                            df_fixtures.loc[idx, 'away_score'] = m.away_score
+                        else:
+                            df_fixtures.loc[idx, 'home_score'] = m.away_score
+                            df_fixtures.loc[idx, 'away_score'] = m.home_score
+                        df_fixtures.loc[idx, 'result_available'] = 1
+            except Exception as e:
+                print(f"  [WARN] Failed to sync completed group matches from DB: {e}")
+            finally:
+                db.close()
+    except Exception as e:
+        print(f"  [WARN] Database models not available for sync: {e}")
+
+    # Update standings with the actual score of the triggered match if it was group stage
+    if stage == "Group Stage":
+        for idx, row in df_fixtures.iterrows():
+            if (row['home_team'].lower() == home_team.lower() and row['away_team'].lower() == away_team.lower()) or \
+               (row['home_team'].lower() == away_team.lower() and row['away_team'].lower() == home_team.lower()):
+                df_fixtures.loc[idx, 'home_score'] = home_score
+                df_fixtures.loc[idx, 'away_score'] = away_score
+                df_fixtures.loc[idx, 'result_available'] = 1
+                
     df_fixtures.to_csv(DEFAULT_DATA_DIR / "wc2026_fixtures.csv", index=False)
     
     df_standings = compute_group_standings(df_predictions, df_fixtures)
@@ -223,7 +290,19 @@ def trigger_adaptive_update(
     all_teams = sorted(set(df_fixtures['home_team']) | set(df_fixtures['away_team']))
     
     n_simulations = 10000
-    simulator = ATLASMonteCarloSimulator(groups, fixture_probs_lookup, team_elos, all_teams)
+    # Fallback to load completed group scores from fixtures list CSV as well
+    for idx, row in df_fixtures.iterrows():
+        if row.get('result_available', 0) == 1 and pd.notna(row.get('home_score')) and pd.notna(row.get('away_score')):
+            h = row['home_team']
+            a = row['away_team']
+            completed_group_scores[(h.lower(), a.lower())] = (int(row['home_score']), int(row['away_score']))
+            
+    simulator = ATLASMonteCarloSimulator(
+        groups, fixture_probs_lookup, team_elos, all_teams,
+        completed_group_scores=completed_group_scores,
+        completed_knockouts=completed_knockouts
+    )
+
     df_sim = simulator.run_simulations(n_simulations=n_simulations, show_progress=False)
     df_sim.to_csv(RES / "wc2026_simulation_results.csv", index=False)
     print("  [OK] Re-simulations completed.")
@@ -366,8 +445,43 @@ def trigger_adaptive_update(
     qualification_json = simulator.team_positions_pct
     save_clean_json(qualification_json, "qualification.json")
     
-    # Latest Shift JSON
-    save_clean_json({"shift_narrative": shift_narrative}, "latest_shift.json")
+    # Latest Shift JSON (computes pre/post delta shifts)
+    shifts = []
+    try:
+        team_changes = []
+        for _, row in df_sim.iterrows():
+            t_name = row['Team']
+            new_champ = float(row['Champion %'])
+            old_val = old_probs.get(t_name, {"champion": 0.0})
+            old_champ = old_val["champion"]
+            delta = new_champ - old_champ
+            team_changes.append((t_name, new_champ, old_champ, delta))
+            
+        team_changes.sort(key=lambda x: abs(x[3]), reverse=True)
+        for t_name, new_c, old_c, d in team_changes[:8]:
+            if abs(d) > 0.01:
+                sign = "+" if d >= 0 else ""
+                shifts.append({
+                    "team": t_name,
+                    "champion_change": f"{sign}{d:.2f}%",
+                    "reason": f"Title chances adjusted from {old_c:.2f}% to {new_c:.2f}% following match results and updated ELO rankings."
+                })
+    except Exception as e:
+        print(f"  [WARN] Failed to compute shift deltas: {e}")
+
+    shift_json = {
+        "generated_at": datetime.now().isoformat(),
+        "trigger_match": {
+            "home_team": home_team,
+            "away_team": away_team,
+            "home_score": home_score,
+            "away_score": away_score,
+            "stage": stage
+        },
+        "shift_narrative": shift_narrative,
+        "shifts": shifts
+    }
+    save_clean_json(shift_json, "latest_shift.json")
     
     # Bracket JSON Compilation
     group_winners = {}
@@ -422,8 +536,15 @@ def trigger_adaptive_update(
         prob_b = get_stage_prob(team_b, stage_prob_key)
         return team_a if prob_a >= prob_b else team_b
 
+    def get_match_score(home, away, stage):
+        key = (home.lower(), away.lower(), stage.lower())
+        if key in db_knockout_scores:
+            return db_knockout_scores[key]
+        return (None, None)
+
     r32_matches = []
     for idx, (h, a) in enumerate(r32_pairings):
+        score_h, score_a = get_match_score(h, a, "Round of 32")
         r32_matches.append({
             'match_id': idx + 1,
             'home_team': h,
@@ -431,7 +552,9 @@ def trigger_adaptive_update(
             'home_prob': get_stage_prob(h, 'Round of 32 %'),
             'away_prob': get_stage_prob(a, 'Round of 32 %'),
             'home_adv_prob': get_stage_prob(h, 'Round of 16 %'),
-            'away_adv_prob': get_stage_prob(a, 'Round of 16 %')
+            'away_adv_prob': get_stage_prob(a, 'Round of 16 %'),
+            'home_score': score_h,
+            'away_score': score_a
         })
         
     r16_pairings = []
@@ -442,6 +565,7 @@ def trigger_adaptive_update(
         
     r16_matches = []
     for idx, (h, a) in enumerate(r16_pairings):
+        score_h, score_a = get_match_score(h, a, "Round of 16")
         r16_matches.append({
             'match_id': 17 + idx,
             'home_team': h,
@@ -449,7 +573,9 @@ def trigger_adaptive_update(
             'home_prob': get_stage_prob(h, 'Round of 16 %'),
             'away_prob': get_stage_prob(a, 'Round of 16 %'),
             'home_adv_prob': get_stage_prob(h, 'Quarter-Final %'),
-            'away_adv_prob': get_stage_prob(a, 'Quarter-Final %')
+            'away_adv_prob': get_stage_prob(a, 'Quarter-Final %'),
+            'home_score': score_h,
+            'away_score': score_a
         })
         
     qf_pairings = []
@@ -460,6 +586,7 @@ def trigger_adaptive_update(
         
     qf_matches = []
     for idx, (h, a) in enumerate(qf_pairings):
+        score_h, score_a = get_match_score(h, a, "Quarter-Final")
         qf_matches.append({
             'match_id': 25 + idx,
             'home_team': h,
@@ -467,7 +594,9 @@ def trigger_adaptive_update(
             'home_prob': get_stage_prob(h, 'Quarter-Final %'),
             'away_prob': get_stage_prob(a, 'Quarter-Final %'),
             'home_adv_prob': get_stage_prob(h, 'Semi-Final %'),
-            'away_adv_prob': get_stage_prob(a, 'Semi-Final %')
+            'away_adv_prob': get_stage_prob(a, 'Semi-Final %'),
+            'home_score': score_h,
+            'away_score': score_a
         })
         
     sf_pairings = []
@@ -478,6 +607,7 @@ def trigger_adaptive_update(
         
     sf_matches = []
     for idx, (h, a) in enumerate(sf_pairings):
+        score_h, score_a = get_match_score(h, a, "Semi-Final")
         sf_matches.append({
             'match_id': 29 + idx,
             'home_team': h,
@@ -485,12 +615,15 @@ def trigger_adaptive_update(
             'home_prob': get_stage_prob(h, 'Semi-Final %'),
             'away_prob': get_stage_prob(a, 'Semi-Final %'),
             'home_adv_prob': get_stage_prob(h, 'Finalist %'),
-            'away_adv_prob': get_stage_prob(a, 'Finalist %')
+            'away_adv_prob': get_stage_prob(a, 'Finalist %'),
+            'home_score': score_h,
+            'away_score': score_a
         })
         
     f_home = get_likely_winner(sf_pairings[0][0], sf_pairings[0][1], 'Finalist %')
     f_away = get_likely_winner(sf_pairings[1][0], sf_pairings[1][1], 'Finalist %')
     
+    score_h, score_a = get_match_score(f_home, f_away, "Final")
     final_match = [{
         'match_id': 31,
         'home_team': f_home,
@@ -498,7 +631,9 @@ def trigger_adaptive_update(
         'home_prob': get_stage_prob(f_home, 'Finalist %'),
         'away_prob': get_stage_prob(f_away, 'Finalist %'),
         'home_adv_prob': get_stage_prob(f_home, 'Champion %'),
-        'away_adv_prob': get_stage_prob(f_away, 'Champion %')
+        'away_adv_prob': get_stage_prob(f_away, 'Champion %'),
+        'home_score': score_h,
+        'away_score': score_a
     }]
     
     bracket_json = {
