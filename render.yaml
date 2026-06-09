@@ -47,12 +47,12 @@ services:
       - key: NEXT_PUBLIC_API_URL
         value: "https://your-backend-service-url.onrender.com/api"
 
+  # 4. Managed Redis Service
+  - type: redis
+    name: tournai-redis
+    plan: free
+
 databases:
   # Managed PostgreSQL DB
   - name: tournai-db
-    plan: free
-
-# Managed Redis instance
-redis:
-  - name: tournai-redis
     plan: free
