@@ -143,6 +143,38 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
+    
+    // Connect to Server-Sent Events (SSE) updates to automatically refresh data
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+    const sseUrl = `${API_BASE.replace(/\/api$/, '')}/api/sse/pipeline`;
+    
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource(sseUrl);
+      eventSource.onmessage = (event) => {
+        try {
+          const parsed = JSON.parse(event.data);
+          if (parsed.event === 'pipeline_complete') {
+            console.log("ATLAS Pipeline Update Detected. Reloading data...", parsed.generated_at);
+            loadData();
+          }
+        } catch (err) {
+          console.warn("Failed to parse SSE event data:", err);
+        }
+      };
+      
+      eventSource.onerror = (err) => {
+        console.warn("SSE connection error. Reconnecting...", err);
+      };
+    } catch (err) {
+      console.warn("SSE connection failed to initialize:", err);
+    }
+    
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
   }, []);
 
   if (loading) {
@@ -991,11 +1023,17 @@ function StandingsView({
 
 function BracketMatchCard({ match }: { match: any }) {
   const homeBetter = match.home_adv_prob >= match.away_adv_prob;
+  const isCompleted = match.home_score !== null && match.home_score !== undefined && match.away_score !== null && match.away_score !== undefined;
+  
   return (
     <div className="glass-card p-3 rounded-xl border border-zinc-800/80 bg-zinc-950/40 w-64 shadow-lg hover:border-cyan-500/30 transition-all duration-200">
       <div className="text-[9px] font-mono text-zinc-500 mb-1.5 flex justify-between">
         <span>Match {match.match_id}</span>
-        <span className="text-cyan-400/80">Slot Adv %</span>
+        {isCompleted ? (
+          <span className="text-emerald-400 font-bold uppercase tracking-wider text-[8px] bg-emerald-950/20 border border-emerald-900/40 px-1.5 py-0.5 rounded">FT Result</span>
+        ) : (
+          <span className="text-cyan-400/80">Slot Adv %</span>
+        )}
       </div>
       <div className="space-y-1.5 text-xs">
         {/* Home Team */}
@@ -1003,9 +1041,13 @@ function BracketMatchCard({ match }: { match: any }) {
           <div className="flex items-center gap-1.5 truncate">
             <span className={`w-1.5 h-1.5 rounded-full ${homeBetter ? 'bg-purple-500' : 'bg-zinc-700'}`}></span>
             <span className="truncate">{match.home_team}</span>
-            <span className="text-[9px] text-zinc-600 font-mono">({match.home_prob?.toFixed(0)}%)</span>
+            {!isCompleted && <span className="text-[9px] text-zinc-600 font-mono">({match.home_prob?.toFixed(0)}%)</span>}
           </div>
-          <span className="font-mono text-purple-400">{match.home_adv_prob?.toFixed(0)}%</span>
+          {isCompleted ? (
+            <span className="font-mono font-bold text-white text-sm bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">{match.home_score}</span>
+          ) : (
+            <span className="font-mono text-purple-400">{match.home_adv_prob?.toFixed(0)}%</span>
+          )}
         </div>
         
         {/* Away Team */}
@@ -1013,9 +1055,13 @@ function BracketMatchCard({ match }: { match: any }) {
           <div className="flex items-center gap-1.5 truncate">
             <span className={`w-1.5 h-1.5 rounded-full ${!homeBetter ? 'bg-cyan-500' : 'bg-zinc-700'}`}></span>
             <span className="truncate">{match.away_team}</span>
-            <span className="text-[9px] text-zinc-600 font-mono">({match.away_prob?.toFixed(0)}%)</span>
+            {!isCompleted && <span className="text-[9px] text-zinc-600 font-mono">({match.away_prob?.toFixed(0)}%)</span>}
           </div>
-          <span className="font-mono text-cyan-400">{match.away_adv_prob?.toFixed(0)}%</span>
+          {isCompleted ? (
+            <span className="font-mono font-bold text-white text-sm bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">{match.away_score}</span>
+          ) : (
+            <span className="font-mono text-cyan-400">{match.away_adv_prob?.toFixed(0)}%</span>
+          )}
         </div>
       </div>
     </div>
@@ -1191,7 +1237,7 @@ function PredictorView({
         setCustomLoading(true);
         try {
           // Wrap API post predict call
-          const response = await fetch('http://localhost:8000/api/predict', {
+          const response = await fetch(`${API_BASE}/predict`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ home_team: customHome, away_team: customAway })
