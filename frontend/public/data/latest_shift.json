@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-06-09T13:14:53.711055",
+  "trigger_match": {
+    "home_team": "Mexico",
+    "away_team": "South Africa",
+    "home_score": 2,
+    "away_score": 1,
+    "stage": "Group Stage"
+  },
+  "shift_narrative": "Following Mexico's 2-1 victory over South Africa, Mexico's Elo rose by +4.9 pts, increasing their Round of 32 advancement probability by -1.2% (now 98.8%) and title chances by -6.3%. Conversely, South Africa's Elo fell by 4.9 pts, dropping their advancement odds by 67.3%.",
+  "shifts": [
+    {
+      "team": "Mexico",
+      "champion_change": "-6.27%",
+      "reason": "Title chances adjusted from 12.06% to 5.79% following match results and updated ELO rankings."
+    },
+    {
+      "team": "Germany",
+      "champion_change": "+3.88%",
+      "reason": "Title chances adjusted from 0.00% to 3.88% following match results and updated ELO rankings."
+    },
+    {
+      "team": "Spain",
+      "champion_change": "+3.35%",
+      "reason": "Title chances adjusted from 17.21% to 20.56% following match results and updated ELO rankings."
+    },
+    {
+      "team": "Ecuador",
+      "champion_change": "-2.38%",
+      "reason": "Title chances adjusted from 5.74% to 3.36% following match results and updated ELO rankings."
+    },
+    {
+      "team": "Argentina",
+      "champion_change": "+1.56%",
+      "reason": "Title chances adjusted from 12.18% to 13.74% following match results and updated ELO rankings."
+    },
+    {
+      "team": "Turkey",
+      "champion_change": "+1.07%",
+      "reason": "Title chances adjusted from 1.50% to 2.57% following match results and updated ELO rankings."
+    },
+    {
+      "team": "France",
+      "champion_change": "-1.06%",
+      "reason": "Title chances adjusted from 12.44% to 11.38% following match results and updated ELO rankings."
+    },
+    {
+      "team": "Colombia",
+      "champion_change": "+0.71%",
+      "reason": "Title chances adjusted from 1.80% to 2.51% following match results and updated ELO rankings."
+    }
+  ]
+}

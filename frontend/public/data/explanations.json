@@ -1,84 +1,84 @@
 {
   "feature_importance": [
     {
-      "feature": "opp_conf_code",
-      "shap_importance": 0.1908900886774063
-    },
-    {
-      "feature": "team_conf_code",
-      "shap_importance": 0.18237726390361786
-    },
-    {
-      "feature": "is_knockout",
-      "shap_importance": 0.17668181657791138
-    },
-    {
       "feature": "is_home",
-      "shap_importance": 0.17604988813400269
+      "shap_importance": 0.033314930761477075
+    },
+    {
+      "feature": "elo_win_prob",
+      "shap_importance": 0.022864719903507465
     },
     {
       "feature": "elo_diff",
-      "shap_importance": 0.16484025120735168
-    },
-    {
-      "feature": "tournament_match_num",
-      "shap_importance": 0.15052933990955353
+      "shap_importance": 0.021221724621496223
     },
     {
       "feature": "experience_diff",
-      "shap_importance": 0.13497598469257355
+      "shap_importance": 0.019615476632840734
     },
     {
-      "feature": "wc_appearances",
-      "shap_importance": 0.13223953545093536
+      "feature": "stage_numeric",
+      "shap_importance": 0.01914008751342745
     },
     {
-      "feature": "wc_avg_goals",
-      "shap_importance": 0.1305902749300003
+      "feature": "is_knockout",
+      "shap_importance": 0.018290884258801345
     },
     {
       "feature": "opp_wc_appearances",
-      "shap_importance": 0.128837451338768
+      "shap_importance": 0.012597023992670792
     },
     {
-      "feature": "squad_quality_diff",
-      "shap_importance": 0.126096710562706
+      "feature": "wc_appearances",
+      "shap_importance": 0.011586973068714456
     },
     {
-      "feature": "form_5",
-      "shap_importance": 0.12294458597898483
+      "feature": "opp_conf_code",
+      "shap_importance": 0.011500621042995492
     },
     {
-      "feature": "opp_form_5",
-      "shap_importance": 0.11209788173437119
+      "feature": "elo_x_knockout",
+      "shap_importance": 0.010911779813089195
     },
     {
-      "feature": "goals_conceded_form5",
-      "shap_importance": 0.08724608272314072
+      "feature": "team_conf_code",
+      "shap_importance": 0.010140571759600949
     },
     {
-      "feature": "goals_scored_form5",
-      "shap_importance": 0.07964509725570679
-    },
-    {
-      "feature": "opp_goals_scored_form5",
-      "shap_importance": 0.07941289991140366
-    },
-    {
-      "feature": "avg_club_prestige",
-      "shap_importance": 0.06596799939870834
+      "feature": "tourn_matches_played",
+      "shap_importance": 0.009245016290894888
     },
     {
       "feature": "opp_avg_club_prestige",
-      "shap_importance": 0.0650264248251915
+      "shap_importance": 0.008910461315231431
     },
     {
-      "feature": "squad_goals_per_match",
-      "shap_importance": 0.06195874512195587
+      "feature": "form_x_stage",
+      "shap_importance": 0.008394171187640314
     },
     {
-      "feature": "opp_squad_goals_per_match",
-      "shap_importance": 0.058443307876586914
+      "feature": "wc_avg_goals",
+      "shap_importance": 0.008236366039979482
+    },
+    {
+      "feature": "avg_club_prestige",
+      "shap_importance": 0.007884378909200742
+    },
+    {
+      "feature": "form_diff",
+      "shap_importance": 0.007623391602383604
+    },
+    {
+      "feature": "opp_wc_semis",
+      "shap_importance": 0.006137539291841251
+    },
+    {
+      "feature": "tournament_match_num",
+      "shap_importance": 0.006065909345118391
+    },
+    {
+      "feature": "opp_form_5",
+      "shap_importance": 0.005790616890206953
     }
   ],
   "match_explanations": [
@@ -86,577 +86,577 @@
       "fixture_id": 1,
       "match": "Mexico vs South Africa",
       "prediction": "Home Win",
-      "reason_1": "World Cup experience differential increases win chance by 63.7%",
-      "reason_2": "form 5 increases win chance by 53.0%",
-      "reason_3": "Host nation advantage increases win chance by 38.7%"
+      "reason_1": "World Cup experience differential increases win chance by 9.3%",
+      "reason_2": "is home increases win chance by 7.3%",
+      "reason_3": "Elo win probability increases win chance by 5.4%"
     },
     {
       "fixture_id": 2,
       "match": "South Korea vs Czech Republic",
-      "prediction": "Away Win",
-      "reason_1": "form 5 decreases win chance by 52.9%",
-      "reason_2": "is home decreases win chance by 43.4%",
-      "reason_3": "World Cup experience differential increases win chance by 42.8%"
+      "prediction": "Home Win",
+      "reason_1": "is home decreases win chance by 7.8%",
+      "reason_2": "World Cup experience differential increases win chance by 6.3%",
+      "reason_3": "wc appearances increases win chance by 3.9%"
     },
     {
       "fixture_id": 3,
       "match": "Canada vs Bosnia and Herzegovina",
       "prediction": "Home Win",
-      "reason_1": "form 5 decreases win chance by 53.9%",
-      "reason_2": "is home increases win chance by 51.9%",
-      "reason_3": "Host nation advantage increases win chance by 44.1%"
+      "reason_1": "is home increases win chance by 9.7%",
+      "reason_2": "Elo win probability increases win chance by 4.3%",
+      "reason_3": "Elo rating difference increases win chance by 4.1%"
     },
     {
       "fixture_id": 4,
       "match": "USA vs Paraguay",
-      "prediction": "Home Win",
-      "reason_1": "opp wc appearances decreases win chance by 53.0%",
-      "reason_2": "Host nation advantage increases win chance by 42.7%",
-      "reason_3": "goals conceded form5 decreases win chance by 27.1%"
+      "prediction": "Draw",
+      "reason_1": "is home increases win chance by 5.7%",
+      "reason_2": "opp wc appearances decreases win chance by 4.5%",
+      "reason_3": "Host nation advantage increases win chance by 2.4%"
     },
     {
       "fixture_id": 5,
       "match": "Qatar vs Switzerland",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 38.1%",
-      "reason_2": "wc avg goals decreases win chance by 26.2%",
-      "reason_3": "World Cup experience differential decreases win chance by 17.5%"
+      "reason_1": "is home decreases win chance by 5.8%",
+      "reason_2": "World Cup experience differential decreases win chance by 3.5%",
+      "reason_3": "Elo win probability decreases win chance by 2.8%"
     },
     {
       "fixture_id": 6,
       "match": "Brazil vs Morocco",
       "prediction": "Draw",
-      "reason_1": "form 5 decreases win chance by 46.1%",
-      "reason_2": "World Cup experience differential increases win chance by 40.9%",
-      "reason_3": "is home decreases win chance by 27.5%"
+      "reason_1": "World Cup experience differential increases win chance by 5.7%",
+      "reason_2": "is home decreases win chance by 5.5%",
+      "reason_3": "wc appearances increases win chance by 3.0%"
     },
     {
       "fixture_id": 7,
       "match": "Haiti vs Scotland",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 42.2%",
-      "reason_2": "opp wc appearances decreases win chance by 24.6%",
-      "reason_3": "form 5 decreases win chance by 22.9%"
+      "reason_1": "is home decreases win chance by 6.5%",
+      "reason_2": "Elo win probability decreases win chance by 3.0%",
+      "reason_3": "Elo rating difference decreases win chance by 2.9%"
     },
     {
       "fixture_id": 8,
       "match": "Australia vs Turkey",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 57.6%",
-      "reason_2": "form 5 decreases win chance by 27.7%",
-      "reason_3": "goals conceded form5 decreases win chance by 24.3%"
+      "reason_1": "is home decreases win chance by 7.5%",
+      "reason_2": "Elo win probability decreases win chance by 3.0%",
+      "reason_3": "Elo rating difference decreases win chance by 2.6%"
     },
     {
       "fixture_id": 9,
       "match": "Sweden vs Tunisia",
-      "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 43.1%",
-      "reason_2": "World Cup experience differential increases win chance by 23.0%",
-      "reason_3": "form 5 decreases win chance by 18.9%"
+      "prediction": "Draw",
+      "reason_1": "is home decreases win chance by 7.3%",
+      "reason_2": "wc appearances increases win chance by 3.1%",
+      "reason_3": "World Cup experience differential increases win chance by 2.5%"
     },
     {
       "fixture_id": 10,
       "match": "Netherlands vs Japan",
-      "prediction": "Home Win",
-      "reason_1": "is home decreases win chance by 41.8%",
-      "reason_2": "wc appearances increases win chance by 23.3%",
-      "reason_3": "World Cup experience differential increases win chance by 23.1%"
+      "prediction": "Draw",
+      "reason_1": "is home decreases win chance by 5.9%",
+      "reason_2": "wc appearances increases win chance by 3.3%",
+      "reason_3": "opp avg club prestige increases win chance by 2.2%"
     },
     {
       "fixture_id": 11,
       "match": "Germany vs Curaçao",
       "prediction": "Home Win",
-      "reason_1": "World Cup experience differential increases win chance by 63.5%",
-      "reason_2": "is home decreases win chance by 48.2%",
-      "reason_3": "form 5 increases win chance by 19.4%"
+      "reason_1": "is home decreases win chance by 7.1%",
+      "reason_2": "World Cup experience differential increases win chance by 6.9%",
+      "reason_3": "Elo rating difference increases win chance by 4.1%"
     },
     {
       "fixture_id": 12,
       "match": "Ivory Coast vs Ecuador",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 72.8%",
-      "reason_2": "tournament match num decreases win chance by 27.8%",
-      "reason_3": "form 5 increases win chance by 24.7%"
+      "reason_1": "is home decreases win chance by 7.9%",
+      "reason_2": "Elo win probability decreases win chance by 3.6%",
+      "reason_3": "Elo rating difference decreases win chance by 3.2%"
     },
     {
       "fixture_id": 13,
       "match": "Belgium vs Egypt",
       "prediction": "Home Win",
-      "reason_1": "World Cup experience differential increases win chance by 91.0%",
-      "reason_2": "is home decreases win chance by 48.8%",
-      "reason_3": "form 5 increases win chance by 45.9%"
+      "reason_1": "World Cup experience differential increases win chance by 8.3%",
+      "reason_2": "is home decreases win chance by 7.5%",
+      "reason_3": "wc appearances increases win chance by 4.6%"
     },
     {
       "fixture_id": 14,
       "match": "Iran vs New Zealand",
       "prediction": "Home Win",
-      "reason_1": "is home decreases win chance by 42.8%",
-      "reason_2": "World Cup experience differential increases win chance by 34.0%",
-      "reason_3": "goals conceded form5 decreases win chance by 26.6%"
+      "reason_1": "is home decreases win chance by 7.6%",
+      "reason_2": "Elo win probability increases win chance by 3.4%",
+      "reason_3": "Elo rating difference increases win chance by 3.3%"
     },
     {
       "fixture_id": 15,
       "match": "Spain vs Cape Verde",
       "prediction": "Home Win",
-      "reason_1": "World Cup experience differential increases win chance by 88.7%",
-      "reason_2": "is home decreases win chance by 45.0%",
-      "reason_3": "form 5 increases win chance by 28.1%"
+      "reason_1": "World Cup experience differential increases win chance by 9.5%",
+      "reason_2": "is home decreases win chance by 7.1%",
+      "reason_3": "wc appearances increases win chance by 4.3%"
     },
     {
       "fixture_id": 16,
       "match": "Saudi Arabia vs Uruguay",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 34.7%",
-      "reason_2": "tournament match num decreases win chance by 27.5%",
-      "reason_3": "goals conceded form5 decreases win chance by 15.6%"
+      "reason_1": "is home decreases win chance by 4.8%",
+      "reason_2": "Elo rating difference decreases win chance by 2.7%",
+      "reason_3": "Elo win probability decreases win chance by 2.6%"
     },
     {
       "fixture_id": 17,
       "match": "Austria vs Jordan",
       "prediction": "Home Win",
-      "reason_1": "is home decreases win chance by 55.1%",
-      "reason_2": "World Cup experience differential increases win chance by 47.9%",
-      "reason_3": "tournament match num decreases win chance by 19.6%"
+      "reason_1": "is home decreases win chance by 8.0%",
+      "reason_2": "World Cup experience differential increases win chance by 6.5%",
+      "reason_3": "Elo win probability increases win chance by 3.5%"
     },
     {
       "fixture_id": 18,
       "match": "Argentina vs Algeria",
       "prediction": "Home Win",
-      "reason_1": "World Cup experience differential increases win chance by 82.1%",
-      "reason_2": "is home decreases win chance by 50.7%",
-      "reason_3": "form 5 increases win chance by 26.9%"
+      "reason_1": "World Cup experience differential increases win chance by 8.3%",
+      "reason_2": "is home decreases win chance by 6.8%",
+      "reason_3": "Elo win probability increases win chance by 4.3%"
     },
     {
       "fixture_id": 19,
       "match": "France vs Senegal",
-      "prediction": "Draw",
-      "reason_1": "World Cup experience differential increases win chance by 71.8%",
-      "reason_2": "is home decreases win chance by 47.4%",
-      "reason_3": "wc appearances increases win chance by 27.5%"
+      "prediction": "Home Win",
+      "reason_1": "World Cup experience differential increases win chance by 8.7%",
+      "reason_2": "is home decreases win chance by 6.9%",
+      "reason_3": "Elo win probability increases win chance by 4.5%"
     },
     {
       "fixture_id": 20,
       "match": "Iraq vs Norway",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 71.2%",
-      "reason_2": "form 5 decreases win chance by 46.0%",
-      "reason_3": "wc avg goals decreases win chance by 25.5%"
+      "reason_1": "is home decreases win chance by 8.5%",
+      "reason_2": "Elo win probability decreases win chance by 3.5%",
+      "reason_3": "Elo rating difference decreases win chance by 3.2%"
     },
     {
       "fixture_id": 21,
       "match": "Portugal vs DR Congo",
       "prediction": "Home Win",
-      "reason_1": "is home decreases win chance by 50.6%",
-      "reason_2": "form 5 increases win chance by 43.5%",
-      "reason_3": "World Cup experience differential increases win chance by 40.6%"
+      "reason_1": "is home decreases win chance by 7.3%",
+      "reason_2": "World Cup experience differential increases win chance by 6.0%",
+      "reason_3": "Elo win probability increases win chance by 4.7%"
     },
     {
       "fixture_id": 22,
       "match": "Uzbekistan vs Colombia",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 54.4%",
-      "reason_2": "Elo rating difference decreases win chance by 29.2%",
-      "reason_3": "opp wc appearances increases win chance by 26.0%"
+      "reason_1": "is home decreases win chance by 7.0%",
+      "reason_2": "Elo win probability decreases win chance by 3.3%",
+      "reason_3": "Elo rating difference decreases win chance by 2.8%"
     },
     {
       "fixture_id": 23,
       "match": "England vs Croatia",
       "prediction": "Draw",
-      "reason_1": "form 5 increases win chance by 45.3%",
-      "reason_2": "is home decreases win chance by 44.8%",
-      "reason_3": "World Cup experience differential increases win chance by 39.4%"
+      "reason_1": "is home decreases win chance by 6.5%",
+      "reason_2": "World Cup experience differential increases win chance by 5.2%",
+      "reason_3": "Elo win probability increases win chance by 2.9%"
     },
     {
       "fixture_id": 24,
       "match": "Ghana vs Panama",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 61.4%",
-      "reason_2": "goals conceded form5 decreases win chance by 18.7%",
-      "reason_3": "form 5 decreases win chance by 18.0%"
+      "reason_1": "is home decreases win chance by 8.0%",
+      "reason_2": "Elo win probability decreases win chance by 2.8%",
+      "reason_3": "Elo rating difference decreases win chance by 2.7%"
     },
     {
       "fixture_id": 25,
       "match": "Czech Republic vs South Africa",
-      "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 65.6%",
-      "reason_2": "form 5 decreases win chance by 49.1%",
-      "reason_3": "Elo rating difference increases win chance by 24.2%"
+      "prediction": "Draw",
+      "reason_1": "is home decreases win chance by 9.1%",
+      "reason_2": "Elo rating difference increases win chance by 3.6%",
+      "reason_3": "Elo win probability increases win chance by 3.3%"
     },
     {
       "fixture_id": 26,
       "match": "Mexico vs South Korea",
       "prediction": "Home Win",
-      "reason_1": "opp wc appearances decreases win chance by 66.8%",
-      "reason_2": "Host nation advantage increases win chance by 36.1%",
-      "reason_3": "form 5 increases win chance by 30.6%"
+      "reason_1": "opp wc appearances decreases win chance by 6.6%",
+      "reason_2": "is home increases win chance by 4.5%",
+      "reason_3": "Elo win probability increases win chance by 3.1%"
     },
     {
       "fixture_id": 27,
       "match": "Switzerland vs Bosnia and Herzegovina",
       "prediction": "Home Win",
-      "reason_1": "World Cup experience differential increases win chance by 105.7%",
-      "reason_2": "form 5 increases win chance by 50.2%",
-      "reason_3": "is home decreases win chance by 34.3%"
+      "reason_1": "World Cup experience differential increases win chance by 9.2%",
+      "reason_2": "is home decreases win chance by 6.3%",
+      "reason_3": "Elo win probability increases win chance by 4.7%"
     },
     {
       "fixture_id": 28,
       "match": "Canada vs Qatar",
       "prediction": "Home Win",
-      "reason_1": "Host nation advantage increases win chance by 43.8%",
-      "reason_2": "form 5 decreases win chance by 40.5%",
-      "reason_3": "is home increases win chance by 39.2%"
+      "reason_1": "is home increases win chance by 8.4%",
+      "reason_2": "Elo win probability increases win chance by 4.1%",
+      "reason_3": "Elo rating difference increases win chance by 4.0%"
     },
     {
       "fixture_id": 29,
       "match": "Turkey vs Paraguay",
-      "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 39.4%",
-      "reason_2": "Elo rating difference increases win chance by 30.1%",
-      "reason_3": "opp wc appearances decreases win chance by 23.8%"
+      "prediction": "Draw",
+      "reason_1": "is home decreases win chance by 6.4%",
+      "reason_2": "World Cup experience differential decreases win chance by 3.3%",
+      "reason_3": "Elo win probability increases win chance by 3.3%"
     },
     {
       "fixture_id": 30,
       "match": "Scotland vs Morocco",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 45.6%",
-      "reason_2": "form 5 decreases win chance by 40.8%",
-      "reason_3": "Elo rating difference decreases win chance by 20.7%"
+      "reason_1": "is home decreases win chance by 6.7%",
+      "reason_2": "Elo win probability decreases win chance by 3.3%",
+      "reason_3": "Elo rating difference decreases win chance by 3.2%"
     },
     {
       "fixture_id": 31,
       "match": "Brazil vs Haiti",
       "prediction": "Home Win",
-      "reason_1": "World Cup experience differential increases win chance by 61.8%",
-      "reason_2": "form 5 decreases win chance by 46.7%",
-      "reason_3": "wc finals decreases win chance by 28.4%"
+      "reason_1": "World Cup experience differential increases win chance by 8.3%",
+      "reason_2": "is home decreases win chance by 5.6%",
+      "reason_3": "Elo win probability increases win chance by 4.4%"
     },
     {
       "fixture_id": 32,
       "match": "USA vs Australia",
       "prediction": "Home Win",
-      "reason_1": "Host nation advantage increases win chance by 46.6%",
-      "reason_2": "goals conceded form5 decreases win chance by 33.2%",
-      "reason_3": "is home increases win chance by 29.0%"
+      "reason_1": "is home increases win chance by 6.0%",
+      "reason_2": "Elo win probability decreases win chance by 2.8%",
+      "reason_3": "Elo rating difference decreases win chance by 2.6%"
     },
     {
       "fixture_id": 33,
       "match": "Netherlands vs Sweden",
-      "prediction": "Home Win",
-      "reason_1": "is home decreases win chance by 26.2%",
-      "reason_2": "opp wc semis decreases win chance by 21.2%",
-      "reason_3": "tournament match num increases win chance by 19.9%"
+      "prediction": "Draw",
+      "reason_1": "is home decreases win chance by 4.8%",
+      "reason_2": "opp wc appearances decreases win chance by 4.1%",
+      "reason_3": "Elo rating difference increases win chance by 3.2%"
     },
     {
       "fixture_id": 34,
       "match": "Tunisia vs Japan",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 42.5%",
-      "reason_2": "goals conceded form5 decreases win chance by 19.7%",
-      "reason_3": "form 5 decreases win chance by 18.8%"
+      "reason_1": "is home decreases win chance by 6.7%",
+      "reason_2": "Elo win probability decreases win chance by 3.1%",
+      "reason_3": "Elo rating difference decreases win chance by 2.7%"
     },
     {
       "fixture_id": 35,
       "match": "Germany vs Ivory Coast",
       "prediction": "Home Win",
-      "reason_1": "World Cup experience differential increases win chance by 43.1%",
-      "reason_2": "is home decreases win chance by 39.9%",
-      "reason_3": "form 5 increases win chance by 27.9%"
+      "reason_1": "is home decreases win chance by 6.1%",
+      "reason_2": "World Cup experience differential increases win chance by 6.1%",
+      "reason_3": "Elo win probability increases win chance by 4.3%"
     },
     {
       "fixture_id": 36,
       "match": "Ecuador vs Curaçao",
-      "prediction": "Away Win",
-      "reason_1": "form 5 decreases win chance by 42.9%",
-      "reason_2": "is home decreases win chance by 32.9%",
-      "reason_3": "goals scored form5 decreases win chance by 30.6%"
+      "prediction": "Home Win",
+      "reason_1": "is home decreases win chance by 7.5%",
+      "reason_2": "Elo win probability increases win chance by 3.8%",
+      "reason_3": "Elo rating difference increases win chance by 3.6%"
     },
     {
       "fixture_id": 37,
       "match": "Belgium vs Iran",
       "prediction": "Home Win",
-      "reason_1": "form 5 increases win chance by 38.3%",
-      "reason_2": "World Cup experience differential increases win chance by 26.0%",
-      "reason_3": "Elo rating difference increases win chance by 23.2%"
+      "reason_1": "is home decreases win chance by 5.8%",
+      "reason_2": "World Cup experience differential increases win chance by 5.0%",
+      "reason_3": "wc appearances increases win chance by 3.8%"
     },
     {
       "fixture_id": 38,
       "match": "New Zealand vs Egypt",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 44.6%",
-      "reason_2": "goals scored form5 decreases win chance by 31.4%",
-      "reason_3": "form 5 decreases win chance by 24.0%"
+      "reason_1": "is home decreases win chance by 7.2%",
+      "reason_2": "Elo win probability decreases win chance by 2.8%",
+      "reason_3": "Elo rating difference decreases win chance by 2.6%"
     },
     {
       "fixture_id": 39,
       "match": "Spain vs Saudi Arabia",
-      "prediction": "Draw",
-      "reason_1": "World Cup experience differential increases win chance by 38.6%",
-      "reason_2": "is home decreases win chance by 26.8%",
-      "reason_3": "form 5 increases win chance by 22.1%"
+      "prediction": "Home Win",
+      "reason_1": "World Cup experience differential increases win chance by 6.5%",
+      "reason_2": "is home decreases win chance by 5.2%",
+      "reason_3": "Elo rating difference increases win chance by 4.2%"
     },
     {
       "fixture_id": 40,
       "match": "Uruguay vs Cape Verde",
       "prediction": "Home Win",
-      "reason_1": "form 5 decreases win chance by 46.0%",
-      "reason_2": "World Cup experience differential increases win chance by 39.3%",
-      "reason_3": "is home decreases win chance by 37.0%"
+      "reason_1": "World Cup experience differential increases win chance by 7.6%",
+      "reason_2": "is home decreases win chance by 6.2%",
+      "reason_3": "Elo win probability increases win chance by 4.2%"
     },
     {
       "fixture_id": 41,
       "match": "France vs Iraq",
       "prediction": "Home Win",
-      "reason_1": "World Cup experience differential increases win chance by 73.6%",
-      "reason_2": "is home decreases win chance by 32.3%",
-      "reason_3": "form 5 increases win chance by 25.6%"
+      "reason_1": "World Cup experience differential increases win chance by 8.2%",
+      "reason_2": "is home decreases win chance by 5.6%",
+      "reason_3": "Elo win probability increases win chance by 4.8%"
     },
     {
       "fixture_id": 42,
       "match": "Norway vs Senegal",
-      "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 40.5%",
-      "reason_2": "form 5 increases win chance by 37.6%",
-      "reason_3": "tournament match num increases win chance by 36.7%"
+      "prediction": "Draw",
+      "reason_1": "is home decreases win chance by 7.5%",
+      "reason_2": "Elo win probability increases win chance by 2.8%",
+      "reason_3": "Elo rating difference increases win chance by 2.6%"
     },
     {
       "fixture_id": 43,
       "match": "Argentina vs Austria",
       "prediction": "Home Win",
-      "reason_1": "World Cup experience differential increases win chance by 62.8%",
-      "reason_2": "is home decreases win chance by 29.3%",
-      "reason_3": "form 5 increases win chance by 28.5%"
+      "reason_1": "World Cup experience differential increases win chance by 7.0%",
+      "reason_2": "is home decreases win chance by 5.3%",
+      "reason_3": "Elo win probability increases win chance by 4.3%"
     },
     {
       "fixture_id": 44,
       "match": "Jordan vs Algeria",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 49.4%",
-      "reason_2": "form 5 decreases win chance by 26.2%",
-      "reason_3": "goals conceded form5 decreases win chance by 21.8%"
+      "reason_1": "is home decreases win chance by 6.7%",
+      "reason_2": "Elo win probability decreases win chance by 3.2%",
+      "reason_3": "Elo rating difference decreases win chance by 2.8%"
     },
     {
       "fixture_id": 45,
       "match": "Portugal vs Uzbekistan",
       "prediction": "Home Win",
-      "reason_1": "form 5 increases win chance by 39.7%",
-      "reason_2": "is home decreases win chance by 27.8%",
-      "reason_3": "World Cup experience differential increases win chance by 27.1%"
+      "reason_1": "is home decreases win chance by 6.1%",
+      "reason_2": "World Cup experience differential increases win chance by 5.7%",
+      "reason_3": "Elo win probability increases win chance by 3.9%"
     },
     {
       "fixture_id": 46,
       "match": "Colombia vs DR Congo",
-      "prediction": "Away Win",
-      "reason_1": "form 5 decreases win chance by 45.3%",
-      "reason_2": "Elo rating difference increases win chance by 32.9%",
-      "reason_3": "goals conceded form5 decreases win chance by 25.5%"
+      "prediction": "Home Win",
+      "reason_1": "is home decreases win chance by 6.6%",
+      "reason_2": "Elo win probability increases win chance by 4.8%",
+      "reason_3": "Elo rating difference increases win chance by 4.7%"
     },
     {
       "fixture_id": 47,
       "match": "England vs Ghana",
-      "prediction": "Draw",
-      "reason_1": "World Cup experience differential increases win chance by 71.3%",
-      "reason_2": "form 5 increases win chance by 43.8%",
-      "reason_3": "is home decreases win chance by 33.0%"
+      "prediction": "Home Win",
+      "reason_1": "World Cup experience differential increases win chance by 9.0%",
+      "reason_2": "is home decreases win chance by 5.6%",
+      "reason_3": "Elo win probability increases win chance by 4.7%"
     },
     {
       "fixture_id": 48,
       "match": "Panama vs Croatia",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 47.3%",
-      "reason_2": "Elo rating difference decreases win chance by 31.8%",
-      "reason_3": "form 5 decreases win chance by 23.6%"
+      "reason_1": "is home decreases win chance by 5.7%",
+      "reason_2": "Elo win probability decreases win chance by 3.3%",
+      "reason_3": "Elo rating difference decreases win chance by 3.2%"
     },
     {
       "fixture_id": 49,
       "match": "Morocco vs Haiti",
       "prediction": "Home Win",
-      "reason_1": "is home decreases win chance by 35.7%",
-      "reason_2": "goals conceded form5 increases win chance by 32.4%",
-      "reason_3": "Elo rating difference increases win chance by 21.6%"
+      "reason_1": "is home decreases win chance by 6.8%",
+      "reason_2": "Elo win probability increases win chance by 4.4%",
+      "reason_3": "Elo rating difference increases win chance by 3.9%"
     },
     {
       "fixture_id": 50,
       "match": "Bosnia and Herzegovina vs Qatar",
-      "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 33.3%",
-      "reason_2": "goals conceded form5 decreases win chance by 30.8%",
-      "reason_3": "opp form 5 increases win chance by 25.1%"
+      "prediction": "Draw",
+      "reason_1": "is home decreases win chance by 7.4%",
+      "reason_2": "opp avg club prestige increases win chance by 2.6%",
+      "reason_3": "tournament match num increases win chance by 2.0%"
     },
     {
       "fixture_id": 51,
       "match": "Scotland vs Brazil",
       "prediction": "Away Win",
-      "reason_1": "form 5 decreases win chance by 38.4%",
-      "reason_2": "is home decreases win chance by 28.4%",
-      "reason_3": "Elo rating difference decreases win chance by 26.8%"
+      "reason_1": "is home decreases win chance by 3.5%",
+      "reason_2": "Elo win probability decreases win chance by 3.2%",
+      "reason_3": "World Cup experience differential decreases win chance by 2.8%"
     },
     {
       "fixture_id": 52,
       "match": "South Africa vs South Korea",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 30.5%",
-      "reason_2": "goals conceded form5 decreases win chance by 20.8%",
-      "reason_3": "form 5 decreases win chance by 20.4%"
+      "reason_1": "is home decreases win chance by 5.2%",
+      "reason_2": "Elo win probability decreases win chance by 3.5%",
+      "reason_3": "Elo rating difference decreases win chance by 3.1%"
     },
     {
       "fixture_id": 53,
       "match": "Mexico vs Czech Republic",
       "prediction": "Home Win",
-      "reason_1": "World Cup experience differential increases win chance by 63.5%",
-      "reason_2": "form 5 increases win chance by 47.3%",
-      "reason_3": "Host nation advantage increases win chance by 34.1%"
+      "reason_1": "World Cup experience differential increases win chance by 7.7%",
+      "reason_2": "is home increases win chance by 5.8%",
+      "reason_3": "Elo win probability increases win chance by 4.9%"
     },
     {
       "fixture_id": 54,
       "match": "Canada vs Switzerland",
-      "prediction": "Home Win",
-      "reason_1": "form 5 decreases win chance by 52.6%",
-      "reason_2": "opp wc appearances decreases win chance by 42.0%",
-      "reason_3": "Host nation advantage increases win chance by 28.6%"
+      "prediction": "Away Win",
+      "reason_1": "opp wc appearances decreases win chance by 5.2%",
+      "reason_2": "is home increases win chance by 4.7%",
+      "reason_3": "World Cup experience differential decreases win chance by 4.5%"
     },
     {
       "fixture_id": 55,
       "match": "USA vs Turkey",
       "prediction": "Home Win",
-      "reason_1": "form 5 decreases win chance by 37.6%",
-      "reason_2": "is home increases win chance by 36.9%",
-      "reason_3": "Host nation advantage increases win chance by 32.7%"
+      "reason_1": "is home increases win chance by 6.2%",
+      "reason_2": "Elo win probability decreases win chance by 4.0%",
+      "reason_3": "Elo rating difference decreases win chance by 3.9%"
     },
     {
       "fixture_id": 56,
       "match": "Paraguay vs Australia",
-      "prediction": "Away Win",
-      "reason_1": "goals scored form5 decreases win chance by 31.2%",
-      "reason_2": "is home decreases win chance by 28.6%",
-      "reason_3": "goals conceded form5 decreases win chance by 28.3%"
+      "prediction": "Draw",
+      "reason_1": "is home decreases win chance by 6.0%",
+      "reason_2": "opp avg club prestige increases win chance by 2.3%",
+      "reason_3": "Elo rating difference increases win chance by 1.9%"
     },
     {
       "fixture_id": 57,
       "match": "Curaçao vs Ivory Coast",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 46.4%",
-      "reason_2": "Elo rating difference decreases win chance by 26.8%",
-      "reason_3": "goals conceded form5 decreases win chance by 19.1%"
+      "reason_1": "is home decreases win chance by 7.6%",
+      "reason_2": "Elo win probability decreases win chance by 3.2%",
+      "reason_3": "Elo rating difference decreases win chance by 3.0%"
     },
     {
       "fixture_id": 58,
       "match": "Ecuador vs Germany",
       "prediction": "Away Win",
-      "reason_1": "form 5 decreases win chance by 44.2%",
-      "reason_2": "tournament match num increases win chance by 29.2%",
-      "reason_3": "is home decreases win chance by 22.9%"
+      "reason_1": "is home decreases win chance by 4.3%",
+      "reason_2": "World Cup experience differential decreases win chance by 2.2%",
+      "reason_3": "opp wc appearances decreases win chance by 1.9%"
     },
     {
       "fixture_id": 59,
       "match": "Japan vs Sweden",
-      "prediction": "Away Win",
-      "reason_1": "tournament match num increases win chance by 34.3%",
-      "reason_2": "Elo rating difference increases win chance by 24.3%",
-      "reason_3": "is home decreases win chance by 23.3%"
+      "prediction": "Draw",
+      "reason_1": "is home decreases win chance by 4.9%",
+      "reason_2": "Elo win probability increases win chance by 3.8%",
+      "reason_3": "Elo rating difference increases win chance by 3.3%"
     },
     {
       "fixture_id": 60,
       "match": "Tunisia vs Netherlands",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 30.0%",
-      "reason_2": "goals conceded form5 decreases win chance by 22.3%",
-      "reason_3": "tournament match num increases win chance by 19.6%"
+      "reason_1": "is home decreases win chance by 4.4%",
+      "reason_2": "Elo win probability decreases win chance by 3.0%",
+      "reason_3": "Elo rating difference decreases win chance by 2.6%"
     },
     {
       "fixture_id": 61,
       "match": "Senegal vs Iraq",
       "prediction": "Home Win",
-      "reason_1": "tournament match num increases win chance by 40.8%",
-      "reason_2": "form 5 increases win chance by 33.7%",
-      "reason_3": "is home decreases win chance by 27.6%"
+      "reason_1": "is home decreases win chance by 7.0%",
+      "reason_2": "Elo win probability increases win chance by 3.3%",
+      "reason_3": "Elo rating difference increases win chance by 3.2%"
     },
     {
       "fixture_id": 62,
       "match": "Norway vs France",
       "prediction": "Away Win",
-      "reason_1": "Elo rating difference decreases win chance by 36.2%",
-      "reason_2": "form 5 increases win chance by 30.6%",
-      "reason_3": "tournament match num increases win chance by 26.4%"
+      "reason_1": "is home decreases win chance by 4.1%",
+      "reason_2": "Elo win probability decreases win chance by 3.4%",
+      "reason_3": "World Cup experience differential decreases win chance by 3.0%"
     },
     {
       "fixture_id": 63,
       "match": "Uruguay vs Spain",
       "prediction": "Draw",
-      "reason_1": "is home decreases win chance by 26.6%",
-      "reason_2": "wc appearances increases win chance by 23.5%",
-      "reason_3": "wc avg goals decreases win chance by 20.8%"
+      "reason_1": "is home decreases win chance by 4.0%",
+      "reason_2": "wc appearances increases win chance by 2.5%",
+      "reason_3": "Elo win probability decreases win chance by 2.3%"
     },
     {
       "fixture_id": 64,
       "match": "New Zealand vs Belgium",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 25.4%",
-      "reason_2": "Elo rating difference decreases win chance by 25.0%",
-      "reason_3": "goals conceded form5 decreases win chance by 19.8%"
+      "reason_1": "is home decreases win chance by 4.6%",
+      "reason_2": "World Cup experience differential decreases win chance by 3.4%",
+      "reason_3": "Elo win probability decreases win chance by 3.3%"
     },
     {
       "fixture_id": 65,
       "match": "Egypt vs Iran",
       "prediction": "Away Win",
-      "reason_1": "form 5 increases win chance by 31.0%",
-      "reason_2": "is home decreases win chance by 27.5%",
-      "reason_3": "Elo rating difference decreases win chance by 26.5%"
+      "reason_1": "is home decreases win chance by 5.7%",
+      "reason_2": "Elo win probability decreases win chance by 3.0%",
+      "reason_3": "Elo rating difference decreases win chance by 3.0%"
     },
     {
       "fixture_id": 66,
       "match": "Cape Verde vs Saudi Arabia",
       "prediction": "Away Win",
-      "reason_1": "form 5 decreases win chance by 46.1%",
-      "reason_2": "tournament match num increases win chance by 23.7%",
-      "reason_3": "goals conceded form5 decreases win chance by 23.4%"
+      "reason_1": "is home decreases win chance by 5.8%",
+      "reason_2": "Elo win probability decreases win chance by 2.9%",
+      "reason_3": "World Cup experience differential decreases win chance by 2.7%"
     },
     {
       "fixture_id": 67,
       "match": "Panama vs England",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 29.9%",
-      "reason_2": "tournament match num increases win chance by 20.8%",
-      "reason_3": "form 5 decreases win chance by 20.0%"
+      "reason_1": "is home decreases win chance by 4.3%",
+      "reason_2": "Elo win probability decreases win chance by 3.0%",
+      "reason_3": "World Cup experience differential decreases win chance by 2.9%"
     },
     {
       "fixture_id": 68,
       "match": "Algeria vs Austria",
       "prediction": "Away Win",
-      "reason_1": "form 5 increases win chance by 35.3%",
-      "reason_2": "goals scored form5 decreases win chance by 28.6%",
-      "reason_3": "tournament match num increases win chance by 26.5%"
+      "reason_1": "is home decreases win chance by 5.6%",
+      "reason_2": "World Cup experience differential decreases win chance by 2.2%",
+      "reason_3": "Elo win probability decreases win chance by 2.0%"
     },
     {
       "fixture_id": 69,
       "match": "Jordan vs Argentina",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 32.6%",
-      "reason_2": "tournament match num increases win chance by 21.4%",
-      "reason_3": "wc appearances increases win chance by 16.4%"
+      "reason_1": "is home decreases win chance by 4.6%",
+      "reason_2": "Elo win probability decreases win chance by 3.2%",
+      "reason_3": "World Cup experience differential decreases win chance by 3.1%"
     },
     {
       "fixture_id": 70,
       "match": "Colombia vs Portugal",
       "prediction": "Away Win",
-      "reason_1": "form 5 decreases win chance by 44.0%",
-      "reason_2": "tournament match num increases win chance by 37.1%",
-      "reason_3": "goals conceded form5 decreases win chance by 24.8%"
+      "reason_1": "is home decreases win chance by 5.1%",
+      "reason_2": "opp wc appearances decreases win chance by 1.9%",
+      "reason_3": "tournament match num increases win chance by 1.9%"
     },
     {
       "fixture_id": 71,
       "match": "DR Congo vs Uzbekistan",
       "prediction": "Away Win",
-      "reason_1": "is home decreases win chance by 37.1%",
-      "reason_2": "goals scored form5 decreases win chance by 31.3%",
-      "reason_3": "goals conceded form5 increases win chance by 31.1%"
+      "reason_1": "is home decreases win chance by 7.4%",
+      "reason_2": "Elo win probability decreases win chance by 3.2%",
+      "reason_3": "Elo rating difference decreases win chance by 2.8%"
     },
     {
       "fixture_id": 72,
       "match": "Croatia vs Ghana",
       "prediction": "Home Win",
-      "reason_1": "tournament match num increases win chance by 41.4%",
-      "reason_2": "is home decreases win chance by 35.7%",
-      "reason_3": "Elo rating difference increases win chance by 20.4%"
+      "reason_1": "is home decreases win chance by 7.2%",
+      "reason_2": "Elo win probability increases win chance by 3.9%",
+      "reason_3": "Elo rating difference increases win chance by 3.7%"
     }
   ]
 }
