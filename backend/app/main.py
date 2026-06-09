@@ -714,6 +714,37 @@ async def get_latest_shift():
     except Exception as e:
         return {"shift_narrative": f"Error loading narrative: {str(e)}"}
 
+@app.post("/api/reset")
+async def reset_database(db: Session = Depends(get_db)):
+    """Resets all matches back to 'scheduled' with null scores, and deletes custom ELO narratives."""
+    try:
+        # Reset matches status and scores
+        db.query(Match).update({
+            Match.home_score: None,
+            Match.away_score: None,
+            Match.status: "scheduled",
+            Match.kickoff_utc: None
+        })
+        db.commit()
+        
+        # Remove latest_shift.json to clear the narrative shift
+        file_path = FRONTEND_DATA_DIR / "latest_shift.json"
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except Exception as e:
+                print(f"Error removing latest_shift.json: {e}")
+                
+        # Reset pipeline status
+        global PIPELINE_STATUS
+        PIPELINE_STATUS = {"status": "idle", "last_run_time": None, "error": None}
+        
+        return {"message": "Database and simulation states reset successfully to pre-tournament baseline."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to reset database: {str(e)}")
+
+
 @app.get("/api/live")
 async def get_live_match(db: Session = Depends(get_db)):
     """

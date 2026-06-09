@@ -126,6 +126,24 @@ export async function getPipelineStatus(): Promise<any> {
   return { status: 'idle', last_run_time: null, error: null };
 }
 
+export async function resetDatabase(): Promise<any> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/reset`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (err) {
+    console.error('Failed to reset database:', err);
+  }
+  return null;
+}
+
+
 export async function getDbMatches(): Promise<any[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/matches`);
