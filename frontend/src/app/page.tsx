@@ -67,6 +67,8 @@ import {
   Cell
 } from "recharts";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -145,7 +147,6 @@ export default function Home() {
     loadData();
     
     // Connect to Server-Sent Events (SSE) updates to automatically refresh data
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
     const sseUrl = `${API_BASE.replace(/\/api$/, '')}/api/sse/pipeline`;
     
     let eventSource: EventSource | null = null;
