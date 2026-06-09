@@ -100,3 +100,39 @@ def get_global_leaderboard(db: Session, limit: int = 100):
         }
         for r in results
     ]
+
+
+import hashlib
+import datetime
+from .models import RefreshToken
+
+def get_refresh_token_by_hash(db: Session, token_hash: str):
+    return db.query(RefreshToken).filter(RefreshToken.token_hash == token_hash).first()
+
+def create_db_refresh_token(db: Session, token: str, user_id: int, expires_in_days: int = 7):
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    expires_at = datetime.datetime.utcnow() + datetime.timedelta(days=expires_in_days)
+    
+    db_token = RefreshToken(
+        token_hash=token_hash,
+        user_id=user_id,
+        expires_at=expires_at,
+        revoked=False
+    )
+    db.add(db_token)
+    db.commit()
+    db.refresh(db_token)
+    return db_token
+
+def revoke_refresh_token(db: Session, token: str):
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    db_token = db.query(RefreshToken).filter(RefreshToken.token_hash == token_hash).first()
+    if db_token:
+        db_token.revoked = True
+        db.commit()
+        return True
+    return False
+
+def revoke_all_user_refresh_tokens(db: Session, user_id: int):
+    db.query(RefreshToken).filter(RefreshToken.user_id == user_id).update({RefreshToken.revoked: True})
+    db.commit()
