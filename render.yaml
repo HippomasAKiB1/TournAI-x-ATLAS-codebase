@@ -51,6 +51,7 @@ services:
   - type: redis
     name: tournai-redis
     plan: free
+    ipAllowList: []
 
 databases:
   # Managed PostgreSQL DB
