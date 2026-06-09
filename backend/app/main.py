@@ -2,11 +2,16 @@ import os
 import json
 import sys
 import math
+import secrets
+import hashlib
+import datetime
+import asyncio
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import timedelta
 from pydantic import BaseModel
-from fastapi import FastAPI, Header, HTTPException, Depends, BackgroundTasks, status
+from fastapi import FastAPI, Header, HTTPException, Depends, BackgroundTasks, status, Request, Response
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -29,6 +34,10 @@ if USE_CELERY:
     except ImportError:
         print("WARNING: Celery tasks module not found. Falling back to BackgroundTasks.")
         USE_CELERY = False
+
+# Cookie Hashing & SameSite settings for Production
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
+COOKIE_SAMESITE = "none" if COOKIE_SECURE else "lax"
 
 # Create tables if they do not exist
 Base.metadata.create_all(bind=engine)
@@ -245,6 +254,51 @@ async def get_group_standings():
 async def get_injuries():
     return load_sanitized_json("injuries.json")
 
+
+@app.get("/api/sse/pipeline")
+async def sse_pipeline_updates(request: Request):
+    """
+    Server-Sent Events endpoint to stream pipeline completion events.
+    Frontend connects to this to automatically refresh data when simulations complete.
+    """
+    async def event_generator():
+        # Check initial timestamp
+        last_timestamp = None
+        predictions_path = FRONTEND_DATA_DIR / "predictions.json"
+        
+        if predictions_path.exists():
+            try:
+                mtime = os.path.getmtime(predictions_path)
+                last_timestamp = mtime
+            except Exception:
+                pass
+                
+        while True:
+            # Check if client disconnected
+            if await request.is_disconnected():
+                break
+                
+            await asyncio.sleep(2)
+            
+            # Check current modification time
+            if predictions_path.exists():
+                try:
+                    mtime = os.path.getmtime(predictions_path)
+                    if last_timestamp is None:
+                        last_timestamp = mtime
+                    elif mtime > last_timestamp:
+                        last_timestamp = mtime
+                        # Read generated_at from file
+                        with open(predictions_path, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                            gen_at = data.get("generated_at", "")
+                        yield f"data: {json.dumps({'event': 'pipeline_complete', 'generated_at': gen_at})}\n\n"
+                except Exception:
+                    # Ignore temporary read issues during writes
+                    pass
+                    
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
 @app.post("/api/predict")
 async def predict_custom_match(payload: PredictPayload):
     """
@@ -389,27 +443,33 @@ async def ingest_match(
         func.lower(Match.away_team) == payload.away_team.lower()
     ).first()
     
+    is_already_completed = False
+    
     if match:
-        match.status = "completed"
-        match.home_score = payload.home_score
-        match.away_score = payload.away_score
-        
-        # 2. Score predictions for this match
-        predictions = db.query(UserPrediction).filter(UserPrediction.match_id == match.id).all()
-        for pred in predictions:
-            # Exact score = 3 pts
-            if pred.predicted_home_score == payload.home_score and pred.predicted_away_score == payload.away_score:
-                pred.points_earned = 3
-            # Correct outcome = 1 pt
-            elif (
-                (pred.predicted_home_score > pred.predicted_away_score and payload.home_score > payload.away_score) or
-                (pred.predicted_home_score < pred.predicted_away_score and payload.home_score < payload.away_score) or
-                (pred.predicted_home_score == pred.predicted_away_score and payload.home_score == payload.away_score)
-            ):
-                pred.points_earned = 1
-            else:
-                pred.points_earned = 0
-        db.commit()
+        # Idempotency check: if score is identical, skip running pipeline
+        if match.status == "completed" and match.home_score == payload.home_score and match.away_score == payload.away_score:
+            is_already_completed = True
+        else:
+            match.status = "completed"
+            match.home_score = payload.home_score
+            match.away_score = payload.away_score
+            
+            # 2. Score predictions for this match
+            predictions = db.query(UserPrediction).filter(UserPrediction.match_id == match.id).all()
+            for pred in predictions:
+                # Exact score = 3 pts
+                if pred.predicted_home_score == payload.home_score and pred.predicted_away_score == payload.away_score:
+                    pred.points_earned = 3
+                # Correct outcome = 1 pt
+                elif (
+                    (pred.predicted_home_score > pred.predicted_away_score and payload.home_score > payload.away_score) or
+                    (pred.predicted_home_score < pred.predicted_away_score and payload.home_score < payload.away_score) or
+                    (pred.predicted_home_score == pred.predicted_away_score and payload.home_score == payload.away_score)
+                ):
+                    pred.points_earned = 1
+                else:
+                    pred.points_earned = 0
+            db.commit()
     else:
         # If match not in pre-populated list, we can create one as completed
         match = Match(
@@ -423,15 +483,26 @@ async def ingest_match(
         db.add(match)
         db.commit()
         
+    if is_already_completed:
+        return {
+            "status": "already_processed",
+            "message": f"Match result for {payload.home_team} vs {payload.away_team} ({payload.home_score}-{payload.away_score}) has already been ingested."
+        }
+        
     # Trigger trigger_adaptive_update in a background task or Celery queue
     if USE_CELERY:
-        run_adaptive_pipeline_task.delay(
+        task = run_adaptive_pipeline_task.delay(
             payload.home_team,
             payload.away_team,
             payload.home_score,
             payload.away_score,
             payload.stage
         )
+        return {
+            "status": "update_queued",
+            "task_id": task.id,
+            "message": f"Adaptive learning and tournament re-simulation triggered in Celery queue (Task: {task.id}) for {payload.home_team} vs {payload.away_team}."
+        }
     else:
         background_tasks.add_task(
             run_pipeline_in_background,
@@ -441,11 +512,10 @@ async def ingest_match(
             payload.away_score,
             payload.stage
         )
-    
-    return {
-        "status": "update_queued",
-        "message": f"Adaptive learning and tournament re-simulation triggered in the background for {payload.home_team} vs {payload.away_team}."
-    }
+        return {
+            "status": "update_queued",
+            "message": f"Adaptive learning and tournament re-simulation triggered in the background for {payload.home_team} vs {payload.away_team}."
+        }
 
 @app.get("/api/pipeline/status")
 async def get_pipeline_status():
@@ -482,7 +552,11 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
 @app.post("/api/auth/token", response_model=schemas.Token)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login_for_access_token(
+    response: Response,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
     """Aquire OAuth2 token for user authentication."""
     user = crud.get_user_by_username(db, username=form_data.username)
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
@@ -495,7 +569,94 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     access_token = auth.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
+    
+    # Generate secure HTTP-only refresh token
+    refresh_token = secrets.token_urlsafe(32)
+    crud.create_db_refresh_token(db, token=refresh_token, user_id=user.id)
+    
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        max_age=7 * 24 * 3600, # 7 days
+        expires=7 * 24 * 3600,
+        samesite=COOKIE_SAMESITE,
+        secure=COOKIE_SECURE,
+    )
+    
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/api/auth/refresh")
+def refresh_access_token(
+    response: Response,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Refresh token missing.")
+        
+    token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
+    db_token = crud.get_refresh_token_by_hash(db, token_hash=token_hash)
+    
+    if not db_token or db_token.revoked or db_token.expires_at < datetime.datetime.utcnow():
+        if db_token:
+            crud.revoke_all_user_refresh_tokens(db, user_id=db_token.user_id)
+        raise HTTPException(status_code=401, detail="Invalid, expired or revoked refresh token.")
+        
+    user = crud.get_user(db, user_id=db_token.user_id)
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found.")
+        
+    # Rotate refresh token: revoke old one, generate new one
+    db_token.revoked = True
+    db.commit()
+    
+    new_refresh_token = secrets.token_urlsafe(32)
+    crud.create_db_refresh_token(db, token=new_refresh_token, user_id=user.id)
+    
+    new_access_token = auth.create_access_token(data={"sub": user.username})
+    
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        httponly=True,
+        max_age=7 * 24 * 3600,
+        expires=7 * 24 * 3600,
+        samesite=COOKIE_SAMESITE,
+        secure=COOKIE_SECURE,
+    )
+    
+    return {
+        "access_token": new_access_token,
+        "token_type": "bearer",
+        "username": user.username
+    }
+
+
+@app.post("/api/auth/logout")
+def logout_user(
+    response: Response,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    refresh_token = request.cookies.get("refresh_token")
+    if refresh_token:
+        crud.revoke_refresh_token(db, token=refresh_token)
+    response.delete_cookie(
+        "refresh_token",
+        samesite=COOKIE_SAMESITE,
+        secure=COOKIE_SECURE,
+    )
+    return {"status": "success", "message": "Successfully logged out."}
+
+
+@app.get("/api/auth/me", response_model=schemas.UserResponse)
+def get_user_me(current_user: User = Depends(auth.get_current_user)):
+    """Fetch current user profile data."""
+    return current_user
+
 
 # ============================================================================
 # 4. FAN PREDICTIONS & LEADERBOARD ENDPOINTS
