@@ -26,6 +26,8 @@ class Match(Base):
     stage = Column(String, default="Group Stage")
     status = Column(String, default="scheduled") # scheduled or completed
     date = Column(String, nullable=True)
+    external_match_id = Column(Integer, nullable=True)
+    kickoff_utc = Column(String, nullable=True)
     
     predictions = relationship("UserPrediction", back_populates="match")
 

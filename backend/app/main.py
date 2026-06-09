@@ -6,6 +6,8 @@ import secrets
 import hashlib
 import datetime
 import asyncio
+import requests
+import csv
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import timedelta
@@ -48,8 +50,180 @@ app = FastAPI(
     version="1.0.0"
 )
 
+async def poll_football_data_loop():
+    """
+    Periodically syncs matches from football-data.org and updates live scores/results.
+    """
+    await asyncio.sleep(10) # Wait for startup migrations to complete
+    api_key = os.getenv("FOOTBALL_DATA_API_KEY", "b9bbbeb96e0d4a96b9595580bf6362ad")
+    headers = {"X-Auth-Token": api_key}
+    
+    print(f"[Live Polling] Starting football-data.org background polling service with key: {api_key[:4]}...{api_key[-4:]}")
+    
+    # 1. Sync external match IDs on startup
+    try:
+        url = "https://api.football-data.org/v4/competitions/WC/matches?season=2026"
+        def fetch_fixtures():
+            return requests.get(url, headers=headers, timeout=12)
+            
+        print(f"[Live Polling] Fetching fixtures from: {url}")
+        res = await asyncio.to_thread(fetch_fixtures)
+        if res.status_code == 200:
+            data = res.json()
+            api_matches = data.get("matches", [])
+            print(f"[Live Polling] Received {len(api_matches)} matches from football-data.org")
+            
+            db = SessionLocal()
+            try:
+                synced_count = 0
+                for api_m in api_matches:
+                    home_name = api_m["homeTeam"]["name"]
+                    away_name = api_m["awayTeam"]["name"]
+                    utc_date = api_m.get("utcDate")
+                    api_id = api_m["id"]
+                    
+                    local_match = db.query(Match).filter(
+                        (func.lower(Match.home_team) == home_name.lower()) & 
+                        (func.lower(Match.away_team) == away_name.lower())
+                    ).first()
+                    
+                    if not local_match:
+                        def clean_team_name(name):
+                            name = name.lower()
+                            if "united states" in name or "usa" in name:
+                                return "usa"
+                            if "saudi arabia" in name:
+                                return "saudi arabia"
+                            return name
+                        
+                        all_matches = db.query(Match).all()
+                        for m in all_matches:
+                            if clean_team_name(m.home_team) == clean_team_name(home_name) and clean_team_name(m.away_team) == clean_team_name(away_name):
+                                local_match = m
+                                break
+                                
+                    if local_match:
+                        local_match.external_match_id = api_id
+                        local_match.kickoff_utc = utc_date
+                        synced_count += 1
+                db.commit()
+                print(f"[Live Polling] Successfully linked {synced_count} matches in local database.")
+            except Exception as e:
+                db.rollback()
+                print(f"[Live Polling] Database error during initial sync: {e}")
+            finally:
+                db.close()
+        else:
+            print(f"[Live Polling] Failed to fetch matches on startup. Status code: {res.status_code}, Msg: {res.text}")
+    except Exception as e:
+        print(f"[Live Polling] Error during initial sync execution: {e}")
+        
+    # 2. Polling loop
+    while True:
+        try:
+            # Poll LIVE matches
+            url_live = "https://api.football-data.org/v4/competitions/WC/matches?status=LIVE"
+            def fetch_live():
+                return requests.get(url_live, headers=headers, timeout=10)
+                
+            res_live = await asyncio.to_thread(fetch_live)
+            if res_live.status_code == 200:
+                live_matches = res_live.json().get("matches", [])
+                if live_matches:
+                    db = SessionLocal()
+                    try:
+                        for api_m in live_matches:
+                            api_id = api_m["id"]
+                            score = api_m.get("score", {})
+                            h_score = score.get("fullTime", {}).get("home") or score.get("regularTime", {}).get("home") or 0
+                            a_score = score.get("fullTime", {}).get("away") or score.get("regularTime", {}).get("away") or 0
+                            
+                            local_m = db.query(Match).filter(Match.external_match_id == api_id).first()
+                            if local_m:
+                                local_m.home_score = h_score
+                                local_m.away_score = a_score
+                                local_m.status = "LIVE"
+                                db.commit()
+                                print(f"[Live Polling] Updated LIVE score: {local_m.home_team} {h_score} - {a_score} {local_m.away_team}")
+                    except Exception as e:
+                        db.rollback()
+                        print(f"[Live Polling] DB Error updating live score: {e}")
+                    finally:
+                        db.close()
+            
+            # Poll FINISHED matches
+            url_finished = "https://api.football-data.org/v4/competitions/WC/matches?status=FINISHED"
+            def fetch_finished():
+                return requests.get(url_finished, headers=headers, timeout=10)
+                
+            res_fin = await asyncio.to_thread(fetch_finished)
+            if res_fin.status_code == 200:
+                finished_matches = res_fin.json().get("matches", [])
+                if finished_matches:
+                    db = SessionLocal()
+                    try:
+                        for api_m in finished_matches:
+                            api_id = api_m["id"]
+                            score = api_m.get("score", {})
+                            h_score = score.get("fullTime", {}).get("home")
+                            a_score = score.get("fullTime", {}).get("away")
+                            
+                            local_m = db.query(Match).filter(Match.external_match_id == api_id).first()
+                            if local_m and local_m.status != "completed" and h_score is not None and a_score is not None:
+                                print(f"[Live Polling] Match finished: {local_m.home_team} vs {local_m.away_team} ({h_score}-{a_score})")
+                                local_m.status = "completed"
+                                local_m.home_score = h_score
+                                local_m.away_score = a_score
+                                db.commit()
+                                
+                                if USE_CELERY:
+                                    run_adaptive_pipeline_task.delay(
+                                        local_m.home_team,
+                                        local_m.away_team,
+                                        h_score,
+                                        a_score,
+                                        local_m.stage
+                                    )
+                                else:
+                                    asyncio.create_task(asyncio.to_thread(
+                                        trigger_adaptive_update,
+                                        home_team=local_m.home_team,
+                                        away_team=local_m.away_team,
+                                        home_score=h_score,
+                                        away_score=a_score,
+                                        stage=local_m.stage
+                                    ))
+                    except Exception as e:
+                        db.rollback()
+                        print(f"[Live Polling] DB Error updating finished match: {e}")
+                    finally:
+                        db.close()
+        except Exception as e:
+            print(f"[Live Polling] Exception in loop: {e}")
+            
+        await asyncio.sleep(60)
+
 @app.on_event("startup")
 def startup_event():
+    # Database migrations to safely add external_match_id and kickoff_utc
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            try:
+                conn.execute(text("ALTER TABLE matches ADD COLUMN external_match_id INTEGER"))
+                conn.commit()
+                print("Migration: Added external_match_id to matches table.")
+            except Exception:
+                pass # Ignore if column already exists
+            try:
+                conn.execute(text("ALTER TABLE matches ADD COLUMN kickoff_utc VARCHAR"))
+                conn.commit()
+                print("Migration: Added kickoff_utc to matches table.")
+            except Exception:
+                pass # Ignore if column already exists
+    except Exception as e:
+        print(f"Migration error: {e}")
+
     db = SessionLocal()
     try:
         if db.query(Match).count() == 0:
@@ -78,6 +252,10 @@ def startup_event():
         db.rollback()
     finally:
         db.close()
+
+    # Start live polling service in background
+    loop = asyncio.get_event_loop()
+    loop.create_task(poll_football_data_loop())
 
 # CORS configuration to allow local frontend access
 app.add_middleware(
@@ -535,6 +713,234 @@ async def get_latest_shift():
             return json.load(f)
     except Exception as e:
         return {"shift_narrative": f"Error loading narrative: {str(e)}"}
+
+@app.get("/api/live")
+async def get_live_match(db: Session = Depends(get_db)):
+    """
+    Returns the current live match in the database, 
+    or a mock live match (Morocco vs Portugal 1-1, 63') as a fallback.
+    """
+    live_match = db.query(Match).filter(Match.status == "LIVE").first()
+    if live_match:
+        try:
+            pred_data = load_sanitized_json("predictions.json")
+            preds = pred_data.get("predictions", [])
+            h2h_pred = next((p for p in preds if p["home_team"].lower() == live_match.home_team.lower() and p["away_team"].lower() == live_match.away_team.lower()), None)
+            probs = {
+                "home_win_prob": h2h_pred.get("home_win_prob") if h2h_pred else 0.38,
+                "draw_prob": h2h_pred.get("draw_prob") if h2h_pred else 0.28,
+                "away_win_prob": h2h_pred.get("away_win_prob") if h2h_pred else 0.34
+            }
+        except Exception:
+            probs = {"home_win_prob": 0.38, "draw_prob": 0.28, "away_win_prob": 0.34}
+            
+        return {
+            "id": live_match.id,
+            "home_team": live_match.home_team,
+            "away_team": live_match.away_team,
+            "home_score": live_match.home_score if live_match.home_score is not None else 0,
+            "away_score": live_match.away_score if live_match.away_score is not None else 0,
+            "minute": 74,
+            "status": "LIVE",
+            "possession_home": 52,
+            "possession_away": 48,
+            "stage": live_match.stage,
+            "kickoff_utc": live_match.kickoff_utc,
+            **probs
+        }
+    
+    return {
+        "id": 9999,
+        "home_team": "Morocco",
+        "away_team": "Portugal",
+        "home_score": 1,
+        "away_score": 1,
+        "minute": 63,
+        "status": "LIVE",
+        "possession_home": 54,
+        "possession_away": 46,
+        "stage": "Quarter-Finals",
+        "kickoff_utc": "2026-06-09T14:00:00Z",
+        "home_win_prob": 0.35,
+        "draw_prob": 0.30,
+        "away_win_prob": 0.35
+    }
+
+@app.get("/api/fixtures")
+async def get_fixtures(date: Optional[str] = None, db: Session = Depends(get_db)):
+    """
+    Returns all match fixtures. If a date is provided, filters matches for that date.
+    """
+    query = db.query(Match)
+    if date:
+        query = query.filter(Match.date == date)
+    matches = query.order_by(Match.id).all()
+    
+    result = []
+    try:
+        pred_data = load_sanitized_json("predictions.json")
+        preds = pred_data.get("predictions", [])
+        pred_map = {(p["home_team"].lower(), p["away_team"].lower()): p for p in preds}
+    except Exception:
+        pred_map = {}
+        
+    for m in matches:
+        p_data = pred_map.get((m.home_team.lower(), m.away_team.lower()))
+        result.append({
+            "id": m.id,
+            "home_team": m.home_team,
+            "away_team": m.away_team,
+            "home_score": m.home_score,
+            "away_score": m.away_score,
+            "stage": m.stage,
+            "status": m.status,
+            "date": m.date,
+            "kickoff_utc": m.kickoff_utc,
+            "home_win_prob": p_data.get("home_win_prob") if p_data else 0.33,
+            "draw_prob": p_data.get("draw_prob") if p_data else 0.33,
+            "away_win_prob": p_data.get("away_win_prob") if p_data else 0.34
+        })
+    return result
+
+@app.get("/api/players/featured")
+async def get_featured_players():
+    """
+    Returns 3 featured players by sorting the top 50 players by impact score, ensuring Hakimi is in.
+    """
+    try:
+        players_data = load_sanitized_json("players.json")
+        top50 = players_data.get("top50", [])
+        sorted_players = sorted(top50, key=lambda x: x.get("impact_score", 0.0), reverse=True)
+        featured = []
+        hakimi = next((p for p in sorted_players if "hakimi" in p["player_name"].lower()), None)
+        if hakimi:
+            featured.append(hakimi)
+            
+        for p in sorted_players:
+            if p not in featured:
+                featured.append(p)
+            if len(featured) == 3:
+                break
+        return featured
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load featured players: {str(e)}")
+
+@app.get("/api/squads/{team_name}")
+async def get_squad_by_team(team_name: str):
+    """
+    Parses wc2026_player_squad.csv, resolves positions dynamically,
+    calculates dynamic impact score, and selects a projected starting XI.
+    """
+    csv_path = ROOT / "Dataset" / "wc2026_player_squad.csv"
+    if not csv_path.exists():
+        raise HTTPException(status_code=404, detail="wc2026_player_squad.csv squad dataset not found.")
+        
+    squad = []
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row["team"].lower() == team_name.lower():
+                    goals = float(row.get("goals_p90") or 0.0)
+                    xg = float(row.get("xg_p90") or 0.0)
+                    key_passes = float(row.get("key_passes_p90") or 0.0)
+                    interceptions = float(row.get("interceptions_p90") or 0.0)
+                    prog_carries = float(row.get("prog_carries_p90") or 0.0)
+                    pass_acc = float(row.get("pass_accuracy") or 0.0)
+                    mv = float(row.get("market_value_M_proxy") or 5.0)
+                    age = int(float(row["age_2026"])) if row.get("age_2026") else 26
+                    
+                    player_name = row["player_name"]
+                    name_lower = player_name.lower()
+                    
+                    gks = [
+                        "martínez", "bono", "bounou", "costa", "maignan", "pickford", "simon", "raya", "casteels", 
+                        "ter stegen", "neuer", "livaković", "vargas", "turner", "onana", "pentz", "viscarra",
+                        "ederson", "alisson", "oblak", "szczęsny", "sommer", "kobel", "donnarumma", "vicario",
+                        "meret", "flekken", "verbruggen", "bijlow", "patrício", "sa", "lloris", "areola", "samba",
+                        "ramsdale", "henderson", "olsen", "hermansen", "schmeichel", "gulácsi", "dibusz", "strakosha",
+                        "berisha", "kastrati", "stankovic", "belec", "gunn", "clark", "mccrorie", "dubravka", "rodak",
+                        "ravalico", "krejci", "stanek", "kovar", "jaros", "pentz", "lindner", "hedl", "valese", "gallese"
+                    ]
+                    
+                    is_gk = False
+                    for gk in gks:
+                        if gk in name_lower:
+                            is_gk = True
+                            break
+                            
+                    if is_gk:
+                        assigned_pos = "GK"
+                    elif goals > 0.15 or xg > 0.15:
+                        assigned_pos = "FWD"
+                    elif interceptions > 0.5 and key_passes < 1.0 and goals < 0.05:
+                        assigned_pos = "DEF"
+                    else:
+                        assigned_pos = "MID"
+                        
+                    raw_impact = 40.0 + (mv * 1.2) + (goals * 15.0) + (key_passes * 8.0) + (interceptions * 10.0)
+                    impact = min(99.9, max(30.0, raw_impact))
+                    
+                    squad.append({
+                        "player_name": player_name,
+                        "team": row["team"],
+                        "position": assigned_pos,
+                        "impact_score": round(impact, 1),
+                        "xg_p90": round(xg, 4),
+                        "goals_p90": round(goals, 4),
+                        "key_passes_p90": round(key_passes, 4),
+                        "interceptions_p90": round(interceptions, 4),
+                        "prog_carries_p90": round(prog_carries, 4),
+                        "pass_accuracy": round(pass_acc, 4),
+                        "market_value_m": mv,
+                        "age": age,
+                        "injury_status": row.get("injury_status") or "Available",
+                        "injury_notes": row.get("injury_notes") or ""
+                    })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to parse squad file: {str(e)}")
+        
+    if not squad:
+        raise HTTPException(status_code=404, detail=f"No squad data found for team: {team_name}")
+        
+    try:
+        players_data = load_sanitized_json("players.json")
+        top50 = players_data.get("top50", [])
+        top50_map = {p["player_name"].lower(): p["impact_score"] for p in top50}
+        for p in squad:
+            name_lower = p["player_name"].lower()
+            if name_lower in top50_map:
+                p["impact_score"] = top50_map[name_lower]
+    except Exception:
+        pass
+        
+    squad.sort(key=lambda x: x["impact_score"], reverse=True)
+    
+    gks = [p for p in squad if p["position"] == "GK"]
+    defs = [p for p in squad if p["position"] == "DEF"]
+    mids = [p for p in squad if p["position"] == "MID"]
+    fwds = [p for p in squad if p["position"] == "FWD"]
+    
+    projected_xi = []
+    if gks:
+        projected_xi.append(gks[0])
+    projected_xi.extend(defs[:4])
+    projected_xi.extend(mids[:3])
+    projected_xi.extend(fwds[:3])
+    
+    if len(projected_xi) < 11:
+        candidates = sorted(squad, key=lambda x: x["impact_score"], reverse=True)
+        for c in candidates:
+            if c not in projected_xi and len(projected_xi) < 11:
+                if c["position"] == "GK" and any(p["position"] == "GK" for p in projected_xi):
+                    continue
+                projected_xi.append(c)
+                
+    return {
+        "team": team_name,
+        "squad": squad,
+        "projected_xi": projected_xi
+    }
 
 # ============================================================================
 # 3. USER AUTHENTICATION ENDPOINTS
