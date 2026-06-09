@@ -54,35 +54,74 @@ def compute_group_standings(df_predictions: pd.DataFrame, df_fixtures: pd.DataFr
             away = fix['away_team']
             pred = fix['predicted_result']
             
+            # Check for actual scores in df_fixtures
+            actual_row = df_fixtures[
+                ((df_fixtures['home_team'].str.lower() == home.lower()) & (df_fixtures['away_team'].str.lower() == away.lower())) |
+                ((df_fixtures['home_team'].str.lower() == away.lower()) & (df_fixtures['away_team'].str.lower() == home.lower()))
+            ]
+            
+            is_actual = False
+            goals_h, goals_a = 0, 0
+            
+            if len(actual_row) > 0:
+                act = actual_row.iloc[0]
+                if pd.notna(act.get('home_score')) and pd.notna(act.get('away_score')) and act.get('result_available', 0) == 1:
+                    is_actual = True
+                    if act['home_team'].lower() == home.lower():
+                        goals_h = int(act['home_score'])
+                        goals_a = int(act['away_score'])
+                    else:
+                        goals_h = int(act['away_score'])
+                        goals_a = int(act['home_score'])
+            
             table[home]['MP'] += 1
             table[away]['MP'] += 1
             
-            # Predict realistic goals based on predicted outcome
-            if pred == 'Home Win':
-                table[home]['W'] += 1
-                table[away]['L'] += 1
-                table[home]['Pts'] += 3
-                table[home]['GF'] += 2
-                table[home]['GA'] += 1
-                table[away]['GF'] += 1
-                table[away]['GA'] += 2
-            elif pred == 'Draw':
-                table[home]['D'] += 1
-                table[away]['D'] += 1
-                table[home]['Pts'] += 1
-                table[away]['Pts'] += 1
-                table[home]['GF'] += 1
-                table[home]['GA'] += 1
-                table[away]['GF'] += 1
-                table[away]['GA'] += 1
-            else:  # Away Win
-                table[away]['W'] += 1
-                table[home]['L'] += 1
-                table[away]['Pts'] += 3
-                table[away]['GF'] += 2
-                table[away]['GA'] += 1
-                table[home]['GF'] += 1
-                table[home]['GA'] += 2
+            if is_actual:
+                table[home]['GF'] += goals_h
+                table[home]['GA'] += goals_a
+                table[away]['GF'] += goals_a
+                table[away]['GA'] += goals_h
+                if goals_h > goals_a:
+                    table[home]['W'] += 1
+                    table[away]['L'] += 1
+                    table[home]['Pts'] += 3
+                elif goals_h == goals_a:
+                    table[home]['D'] += 1
+                    table[away]['D'] += 1
+                    table[home]['Pts'] += 1
+                    table[away]['Pts'] += 1
+                else:
+                    table[away]['W'] += 1
+                    table[home]['L'] += 1
+                    table[away]['Pts'] += 3
+            else:
+                # Predict realistic goals based on predicted outcome
+                if pred == 'Home Win':
+                    table[home]['W'] += 1
+                    table[away]['L'] += 1
+                    table[home]['Pts'] += 3
+                    table[home]['GF'] += 2
+                    table[home]['GA'] += 1
+                    table[away]['GF'] += 1
+                    table[away]['GA'] += 2
+                elif pred == 'Draw':
+                    table[home]['D'] += 1
+                    table[away]['D'] += 1
+                    table[home]['Pts'] += 1
+                    table[away]['Pts'] += 1
+                    table[home]['GF'] += 1
+                    table[home]['GA'] += 1
+                    table[away]['GF'] += 1
+                    table[away]['GA'] += 1
+                else:  # Away Win
+                    table[away]['W'] += 1
+                    table[home]['L'] += 1
+                    table[away]['Pts'] += 3
+                    table[away]['GF'] += 2
+                    table[away]['GA'] += 1
+                    table[home]['GF'] += 1
+                    table[home]['GA'] += 2
                 
         for team in table:
             table[team]['GD'] = table[team]['GF'] - table[team]['GA']
