@@ -294,7 +294,64 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-8 pb-20">
-      
+
+      {/* 0. FIFA WORLD CUP 2026 HERO BANNER */}
+      <section className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-gradient-to-br from-[#0d0a00] via-[#0c0c1a] to-[#04040e] p-6 sm:p-10 text-center shadow-[0_0_80px_rgba(245,158,11,0.07)] stadium-glow">
+        {/* Background stadium spotlight rings */}
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
+        <div className="absolute -top-20 left-1/4 w-[300px] h-[300px] rounded-full bg-violet-500/5 blur-3xl pointer-events-none" />
+        <div className="absolute -top-20 right-1/4 w-[300px] h-[300px] rounded-full bg-cyan-500/5 blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 cyber-grid opacity-5 pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col items-center gap-4">
+          {/* Tournament chip */}
+          <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/5 text-amber-400 text-[10px] font-mono font-extrabold uppercase tracking-widest select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            Official AI Intelligence System — FIFA World Cup 2026™
+          </div>
+
+          {/* Trophy + Title */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-6xl sm:text-7xl select-none animate-float filter drop-shadow-[0_0_30px_rgba(245,158,11,0.5)]">🏆</span>
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-shimmer leading-none">
+              World Cup 2026
+            </h1>
+            <p className="text-xs sm:text-sm text-zinc-400 font-medium max-w-lg mt-1.5 leading-relaxed">
+              ATLAS-powered predictions · Monte Carlo simulations · Live ELO tracking
+            </p>
+          </div>
+
+          {/* Host Nations Row */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
+            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest select-none mr-1">Hosted by</span>
+            {[
+              { flag: "🇺🇸", name: "USA", city: "New York / LA" },
+              { flag: "🇨🇦", name: "Canada", city: "Toronto / Vancouver" },
+              { flag: "🇲🇽", name: "Mexico", city: "Mexico City" },
+            ].map((host) => (
+              <div key={host.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-zinc-800/80 bg-zinc-950/60 hover:border-amber-500/30 transition duration-200 select-none">
+                <span className="text-xl">{host.flag}</span>
+                <div className="text-left">
+                  <span className="text-xs font-extrabold text-zinc-200 block leading-none">{host.name}</span>
+                  <span className="text-[9px] font-mono text-zinc-500 block">{host.city}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Stats pill row */}
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-1 text-[10px] font-mono text-zinc-500 select-none">
+            <span className="flex items-center gap-1"><span className="text-amber-400 font-bold">48</span> Teams</span>
+            <span className="w-px h-3 bg-zinc-700" />
+            <span className="flex items-center gap-1"><span className="text-cyan-400 font-bold">104</span> Matches</span>
+            <span className="w-px h-3 bg-zinc-700" />
+            <span className="flex items-center gap-1"><span className="text-violet-400 font-bold">16</span> Host Cities</span>
+            <span className="w-px h-3 bg-zinc-700" />
+            <span className="flex items-center gap-1"><span className="text-emerald-400 font-bold">Jun–Jul</span> 2026</span>
+          </div>
+        </div>
+      </section>
+
       {/* 1. HERO WIDGET: Match Right Now */}
       {liveMatch && (
         <section className="relative overflow-hidden rounded-3xl border border-cyan-500/15 bg-gradient-to-br from-indigo-950/40 via-[#090915] to-[#040914] p-6 sm:p-8 shadow-[0_0_30px_rgba(139,92,246,0.08)]">

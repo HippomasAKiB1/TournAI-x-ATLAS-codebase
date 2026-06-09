@@ -37,6 +37,14 @@ export default function InjuryLabPage() {
   // List of players for select menu from players.json top50
   const availablePlayers = players?.top50 || [];
 
+  // Auto-select first player when available list loads
+  useEffect(() => {
+    if (availablePlayers.length > 0 && !availablePlayers.some(p => p.player_name === selectedPlayer)) {
+      setSelectedPlayer(availablePlayers[0].player_name);
+    }
+  }, [availablePlayers, selectedPlayer]);
+
+
   // Local fallback calculator for offline/error robustness
   const computeLocalWhatIf = (playerName: string) => {
     const playerObj = availablePlayers.find(p => p.player_name === playerName);

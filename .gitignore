@@ -13,7 +13,6 @@ env/
 venv/
 
 # Project-specific ignores (datasets, outputs, catboost logs)
-Dataset/
 output/
 catboost_info/
 
