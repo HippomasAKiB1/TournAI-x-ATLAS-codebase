@@ -1,9 +1,9 @@
 import datetime
 from typing import Optional
 from fastapi import Depends, HTTPException, status
+import bcrypt
 from fastapi.security import OAuth2PasswordBearer
 import jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from .session import get_db
 from .models import User
@@ -13,16 +13,18 @@ SECRET_KEY = "atlas-jwt-secret-key-for-auth-token-2026"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify standard text password against stored hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception:
+        return False
 
 def get_password_hash(password: str) -> str:
     """Generate bcrypt hash from text password."""
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] = None) -> str:
     """Generate a JWT token with custom claims and expiration."""
