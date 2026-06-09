@@ -13,6 +13,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     
     predictions = relationship("UserPrediction", back_populates="user")
+    refresh_tokens = relationship("RefreshToken", back_populates="user")
 
 class Match(Base):
     __tablename__ = "matches"
@@ -41,3 +42,15 @@ class UserPrediction(Base):
     
     user = relationship("User", back_populates="predictions")
     match = relationship("Match", back_populates="predictions")
+
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token_hash = Column(String, unique=True, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    revoked = Column(Boolean, default=False)
+
+    user = relationship("User", back_populates="refresh_tokens")
