@@ -382,7 +382,11 @@ export default function HomePage() {
               { flag: "🇲🇽", name: "Mexico", city: "Mexico City" },
             ].map((host) => (
               <div key={host.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-zinc-800/80 bg-zinc-950/60 hover:border-amber-500/30 transition duration-200 select-none">
-                <span className="text-xl">{host.flag}</span>
+                {FLAG_MAP[host.name] ? (
+                  <img src={FLAG_MAP[host.name]} alt={host.name} className="h-5 w-7 object-contain rounded-sm shrink-0" />
+                ) : (
+                  <span className="text-xl select-none">🏳️</span>
+                )}
                 <div className="text-left">
                   <span className="text-xs font-extrabold text-zinc-200 block leading-none">{host.name}</span>
                   <span className="text-[9px] font-mono text-zinc-500 block">{host.city}</span>
