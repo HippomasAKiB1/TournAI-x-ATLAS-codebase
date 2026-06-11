@@ -28,6 +28,59 @@ import {
   Cell
 } from "recharts";
 
+const FLAG_MAP: Record<string, string> = {
+  "Algeria": "/images/country-logos/ALG.png",
+  "Argentina": "/images/country-logos/ARG.png",
+  "Australia": "/images/country-logos/AUS.png",
+  "Austria": "/images/country-logos/AUT.png",
+  "Belgium": "/images/country-logos/BEL.png",
+  "Bosnia and Herzegovina": "/images/country-logos/BIH.png",
+  "Brazil": "/images/country-logos/BRA.png",
+  "Canada": "/images/country-logos/CAN.png",
+  "Cape Verde": "/images/country-logos/CPV.png",
+  "Colombia": "/images/country-logos/COL.png",
+  "Croatia": "/images/country-logos/CRO.png",
+  "Curaçao": "/images/country-logos/CUW.png",
+  "Curacao": "/images/country-logos/CUW.png",
+  "Czech Republic": "/images/country-logos/CZE.png",
+  "DR Congo": "/images/country-logos/COD.png",
+  "Ecuador": "/images/country-logos/ECU.png",
+  "Egypt": "/images/country-logos/EGY.png",
+  "England": "/images/country-logos/ENG.png",
+  "France": "/images/country-logos/FRA.png",
+  "Germany": "/images/country-logos/GER.png",
+  "Ghana": "/images/country-logos/GHA.png",
+  "Haiti": "/images/country-logos/HAI.png",
+  "Iran": "/images/country-logos/IRN.png",
+  "Iraq": "/images/country-logos/IRQ.png",
+  "Ivory Coast": "/images/country-logos/CIV.png",
+  "Japan": "/images/country-logos/JPN.png",
+  "Jordan": "/images/country-logos/JOR.png",
+  "Mexico": "/images/country-logos/MEX.png",
+  "Morocco": "/images/country-logos/MAR.png",
+  "Netherlands": "/images/country-logos/NED.png",
+  "New Zealand": "/images/country-logos/NZL.png",
+  "Norway": "/images/country-logos/NOR.png",
+  "Panama": "/images/country-logos/PAN.png",
+  "Paraguay": "/images/country-logos/PAR.png",
+  "Portugal": "/images/country-logos/POR.png",
+  "Qatar": "/images/country-logos/QAT.png",
+  "Saudi Arabia": "/images/country-logos/KSA.png",
+  "Scotland": "/images/country-logos/SCO.png",
+  "Senegal": "/images/country-logos/SEN.png",
+  "South Africa": "/images/country-logos/RSA.png",
+  "South Africa ": "/images/country-logos/RSA.png",
+  "South Korea": "/images/country-logos/KOR.png",
+  "Spain": "/images/country-logos/ESP.png",
+  "Sweden": "/images/country-logos/SWE.png",
+  "Switzerland": "/images/country-logos/SUI.png",
+  "Tunisia": "/images/country-logos/TUN.png",
+  "Turkey": "/images/country-logos/TUR.png",
+  "USA": "/images/country-logos/USA.png",
+  "Uruguay": "/images/country-logos/URU.png",
+  "Uzbekistan": "/images/country-logos/UZB.png"
+};
+
 export default function PredictionsPage() {
   const { 
     loading, 
@@ -402,10 +455,16 @@ export default function PredictionsPage() {
             <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider">ATLAS Prediction Odds</span>
             <div className="flex items-center justify-between mt-4 mb-6">
               <div className="flex items-center gap-3">
+                {FLAG_MAP[homeTeam] && (
+                  <img src={FLAG_MAP[homeTeam]} alt={homeTeam} className="h-8 w-10 object-contain rounded-md shrink-0" />
+                )}
                 <span className="text-3xl font-extrabold text-white">{homeTeam}</span>
               </div>
               <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest px-2 py-1 bg-zinc-950 rounded">VS</span>
               <div className="flex items-center gap-3">
+                {FLAG_MAP[awayTeam] && (
+                  <img src={FLAG_MAP[awayTeam]} alt={awayTeam} className="h-8 w-10 object-contain rounded-md shrink-0" />
+                )}
                 <span className="text-3xl font-extrabold text-white">{awayTeam}</span>
               </div>
             </div>

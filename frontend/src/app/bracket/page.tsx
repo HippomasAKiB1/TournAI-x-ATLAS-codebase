@@ -9,6 +9,59 @@ import {
   Loader2
 } from "lucide-react";
 
+const FLAG_MAP: Record<string, string> = {
+  "Algeria": "/images/country-logos/ALG.png",
+  "Argentina": "/images/country-logos/ARG.png",
+  "Australia": "/images/country-logos/AUS.png",
+  "Austria": "/images/country-logos/AUT.png",
+  "Belgium": "/images/country-logos/BEL.png",
+  "Bosnia and Herzegovina": "/images/country-logos/BIH.png",
+  "Brazil": "/images/country-logos/BRA.png",
+  "Canada": "/images/country-logos/CAN.png",
+  "Cape Verde": "/images/country-logos/CPV.png",
+  "Colombia": "/images/country-logos/COL.png",
+  "Croatia": "/images/country-logos/CRO.png",
+  "Curaçao": "/images/country-logos/CUW.png",
+  "Curacao": "/images/country-logos/CUW.png",
+  "Czech Republic": "/images/country-logos/CZE.png",
+  "DR Congo": "/images/country-logos/COD.png",
+  "Ecuador": "/images/country-logos/ECU.png",
+  "Egypt": "/images/country-logos/EGY.png",
+  "England": "/images/country-logos/ENG.png",
+  "France": "/images/country-logos/FRA.png",
+  "Germany": "/images/country-logos/GER.png",
+  "Ghana": "/images/country-logos/GHA.png",
+  "Haiti": "/images/country-logos/HAI.png",
+  "Iran": "/images/country-logos/IRN.png",
+  "Iraq": "/images/country-logos/IRQ.png",
+  "Ivory Coast": "/images/country-logos/CIV.png",
+  "Japan": "/images/country-logos/JPN.png",
+  "Jordan": "/images/country-logos/JOR.png",
+  "Mexico": "/images/country-logos/MEX.png",
+  "Morocco": "/images/country-logos/MAR.png",
+  "Netherlands": "/images/country-logos/NED.png",
+  "New Zealand": "/images/country-logos/NZL.png",
+  "Norway": "/images/country-logos/NOR.png",
+  "Panama": "/images/country-logos/PAN.png",
+  "Paraguay": "/images/country-logos/PAR.png",
+  "Portugal": "/images/country-logos/POR.png",
+  "Qatar": "/images/country-logos/QAT.png",
+  "Saudi Arabia": "/images/country-logos/KSA.png",
+  "Scotland": "/images/country-logos/SCO.png",
+  "Senegal": "/images/country-logos/SEN.png",
+  "South Africa": "/images/country-logos/RSA.png",
+  "South Africa ": "/images/country-logos/RSA.png",
+  "South Korea": "/images/country-logos/KOR.png",
+  "Spain": "/images/country-logos/ESP.png",
+  "Sweden": "/images/country-logos/SWE.png",
+  "Switzerland": "/images/country-logos/SUI.png",
+  "Tunisia": "/images/country-logos/TUN.png",
+  "Turkey": "/images/country-logos/TUR.png",
+  "USA": "/images/country-logos/USA.png",
+  "Uruguay": "/images/country-logos/URU.png",
+  "Uzbekistan": "/images/country-logos/UZB.png"
+};
+
 export default function BracketPage() {
   const { 
     loading, 
@@ -145,7 +198,14 @@ export default function BracketPage() {
                     return (
                       <tr key={team.Team} className="hover:bg-zinc-900/10 transition">
                         <td className="py-4 px-6 text-center font-mono font-extrabold text-zinc-400">{team.Position}</td>
-                        <td className="py-4 px-4 font-bold text-white text-sm">{team.Team}</td>
+                        <td className="py-4 px-4 font-bold text-white text-sm flex items-center gap-2">
+                          {FLAG_MAP[team.Team] ? (
+                            <img src={FLAG_MAP[team.Team]} alt={team.Team} className="h-4 w-5 object-contain rounded-sm" />
+                          ) : (
+                            <span>🏳️</span>
+                          )}
+                          <span>{team.Team}</span>
+                        </td>
                         <td className="py-4 px-4 text-center font-mono">{team.MP}</td>
                         <td className="py-4 px-4 text-center font-mono">{team.W}</td>
                         <td className="py-4 px-4 text-center font-mono">{team.D}</td>
@@ -241,7 +301,12 @@ export default function BracketPage() {
                   return (
                     <div className="glass-card p-6 rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-950/20 to-yellow-950/10 text-center shadow-lg relative overflow-hidden py-10">
                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-yellow-300"></div>
-                      <Trophy className="w-12 h-12 text-amber-400 mx-auto mb-4 animate-pulse" />
+                      <div className="relative flex justify-center items-center mb-4">
+                        <Trophy className="w-12 h-12 text-amber-400 animate-pulse z-10" />
+                        {FLAG_MAP[champName] && (
+                          <img src={FLAG_MAP[champName]} alt={champName} className="absolute h-10 w-12 object-contain opacity-25 rounded-md" />
+                        )}
+                      </div>
                       <h5 className="text-lg font-extrabold text-white tracking-tight uppercase leading-none">{champName}</h5>
                       <span className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase block mt-2">Projected Winner</span>
                       <div className="mt-4 px-4 py-1.5 bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-full inline-block font-mono text-xs font-bold">
@@ -291,7 +356,11 @@ function BracketMatchCard({ match }: { match: any }) {
         {/* Home Team */}
         <div className={`flex items-center justify-between p-1.5 rounded ${homeBetter ? 'bg-purple-950/20 text-purple-200 font-semibold' : 'text-zinc-400'}`}>
           <div className="flex items-center gap-1.5 truncate">
-            <span className={`w-1.5 h-1.5 rounded-full ${homeBetter ? 'bg-purple-500' : 'bg-zinc-700'}`}></span>
+            {FLAG_MAP[match.home_team] ? (
+              <img src={FLAG_MAP[match.home_team]} alt={match.home_team} className="h-3.5 w-4.5 object-contain rounded-sm shrink-0" />
+            ) : (
+              <span className={`w-1.5 h-1.5 rounded-full ${homeBetter ? 'bg-purple-500' : 'bg-zinc-700'}`}></span>
+            )}
             <span className="truncate">{match.home_team}</span>
             {!isCompleted && <span className="text-[9px] text-zinc-600 font-mono">({match.home_prob?.toFixed(0)}%)</span>}
           </div>
@@ -305,7 +374,11 @@ function BracketMatchCard({ match }: { match: any }) {
         {/* Away Team */}
         <div className={`flex items-center justify-between p-1.5 rounded ${!homeBetter ? 'bg-cyan-950/20 text-cyan-200 font-semibold' : 'text-zinc-400'}`}>
           <div className="flex items-center gap-1.5 truncate">
-            <span className={`w-1.5 h-1.5 rounded-full ${!homeBetter ? 'bg-cyan-500' : 'bg-zinc-700'}`}></span>
+            {FLAG_MAP[match.away_team] ? (
+              <img src={FLAG_MAP[match.away_team]} alt={match.away_team} className="h-3.5 w-4.5 object-contain rounded-sm shrink-0" />
+            ) : (
+              <span className={`w-1.5 h-1.5 rounded-full ${!homeBetter ? 'bg-cyan-500' : 'bg-zinc-700'}`}></span>
+            )}
             <span className="truncate">{match.away_team}</span>
             {!isCompleted && <span className="text-[9px] text-zinc-600 font-mono">({match.away_prob?.toFixed(0)}%)</span>}
           </div>

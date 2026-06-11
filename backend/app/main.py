@@ -868,66 +868,94 @@ async def get_squad_by_team(team_name: str):
         
     squad = []
     try:
+        raw_players = []
         with open(csv_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 if row["team"].lower() == team_name.lower():
-                    goals = float(row.get("goals_p90") or 0.0)
-                    xg = float(row.get("xg_p90") or 0.0)
-                    key_passes = float(row.get("key_passes_p90") or 0.0)
-                    interceptions = float(row.get("interceptions_p90") or 0.0)
-                    prog_carries = float(row.get("prog_carries_p90") or 0.0)
-                    pass_acc = float(row.get("pass_accuracy") or 0.0)
-                    mv = float(row.get("market_value_M_proxy") or 5.0)
-                    age = int(float(row["age_2026"])) if row.get("age_2026") else 26
+                    raw_players.append(row)
                     
-                    player_name = row["player_name"]
-                    name_lower = player_name.lower()
-                    
-                    gks = [
-                        "martínez", "bono", "bounou", "costa", "maignan", "pickford", "simon", "raya", "casteels", 
-                        "ter stegen", "neuer", "livaković", "vargas", "turner", "onana", "pentz", "viscarra",
-                        "ederson", "alisson", "oblak", "szczęsny", "sommer", "kobel", "donnarumma", "vicario",
-                        "meret", "flekken", "verbruggen", "bijlow", "patrício", "sa", "lloris", "areola", "samba",
-                        "ramsdale", "henderson", "olsen", "hermansen", "schmeichel", "gulácsi", "dibusz", "strakosha",
-                        "berisha", "kastrati", "stankovic", "belec", "gunn", "clark", "mccrorie", "dubravka", "rodak",
-                        "ravalico", "krejci", "stanek", "kovar", "jaros", "pentz", "lindner", "hedl", "valese", "gallese"
-                    ]
-                    
-                    is_gk = False
-                    for gk in gks:
-                        if gk in name_lower:
-                            is_gk = True
-                            break
-                            
-                    if is_gk:
-                        assigned_pos = "GK"
-                    elif goals > 0.15 or xg > 0.15:
-                        assigned_pos = "FWD"
-                    elif interceptions > 0.5 and key_passes < 1.0 and goals < 0.05:
-                        assigned_pos = "DEF"
-                    else:
-                        assigned_pos = "MID"
-                        
-                    raw_impact = 40.0 + (mv * 1.2) + (goals * 15.0) + (key_passes * 8.0) + (interceptions * 10.0)
-                    impact = min(99.9, max(30.0, raw_impact))
-                    
-                    squad.append({
-                        "player_name": player_name,
-                        "team": row["team"],
-                        "position": assigned_pos,
-                        "impact_score": round(impact, 1),
-                        "xg_p90": round(xg, 4),
-                        "goals_p90": round(goals, 4),
-                        "key_passes_p90": round(key_passes, 4),
-                        "interceptions_p90": round(interceptions, 4),
-                        "prog_carries_p90": round(prog_carries, 4),
-                        "pass_accuracy": round(pass_acc, 4),
-                        "market_value_m": mv,
-                        "age": age,
-                        "injury_status": row.get("injury_status") or "Available",
-                        "injury_notes": row.get("injury_notes") or ""
-                    })
+        if not raw_players:
+            raise HTTPException(status_code=404, detail=f"No squad data found for team: {team_name}")
+            
+        gks_list = [
+            "martínez", "martinez", "bono", "bounou", "costa", "maignan", "pickford", "simon", "raya", "casteels", 
+            "ter stegen", "neuer", "livaković", "livakovic", "vargas", "turner", "onana", "pentz", "viscarra",
+            "ederson", "alisson", "oblak", "szczęsny", "szczesny", "sommer", "kobel", "donnarumma", "vicario",
+            "meret", "flekken", "verbruggen", "bijlow", "patrício", "patricio", "sa", "lloris", "areola", "samba",
+            "ramsdale", "henderson", "olsen", "hermansen", "schmeichel", "gulácsi", "gulacsi", "dibusz", "strakosha",
+            "berisha", "kastrati", "stankovic", "belec", "gunn", "clark", "mccrorie", "dubravka", "rodak",
+            "ravalico", "krejci", "stanek", "kovar", "jaros", "pentz", "lindner", "hedl", "valese", "gallese",
+            "crépeau", "crepeau", "clair", "niță", "nita", "târnovanu", "tarnovanu", "moldovan", "rochet",
+            "mele", "israel", "cáceda", "caceda", "romero", "malagón", "malagon", "gonzález", "gonzalez",
+            "padilla", "mvogo", "kahric", "mejía", "mejia", "mosquera", "stanković", "allison", "oblen", "horvath"
+        ]
+        
+        processed_players = []
+        for row in raw_players:
+            goals = float(row.get("goals_p90") or 0.0)
+            xg = float(row.get("xg_p90") or 0.0)
+            key_passes = float(row.get("key_passes_p90") or 0.0)
+            interceptions = float(row.get("interceptions_p90") or 0.0)
+            prog_carries = float(row.get("prog_carries_p90") or 0.0)
+            pass_acc = float(row.get("pass_accuracy") or 0.0)
+            mv = float(row.get("market_value_M_proxy") or 5.0)
+            age = int(float(row["age_2026"])) if row.get("age_2026") else 26
+            
+            player_name = row["player_name"]
+            
+            raw_impact = 40.0 + (mv * 1.2) + (goals * 15.0) + (key_passes * 8.0) + (interceptions * 10.0)
+            impact = min(99.9, max(30.0, raw_impact))
+            
+            processed_players.append({
+                "player_name": player_name,
+                "team": row["team"],
+                "impact_score": round(impact, 1),
+                "xg_p90": round(xg, 4),
+                "goals_p90": round(goals, 4),
+                "key_passes_p90": round(key_passes, 4),
+                "interceptions_p90": round(interceptions, 4),
+                "prog_carries_p90": round(prog_carries, 4),
+                "pass_accuracy": round(pass_acc, 4),
+                "market_value_m": mv,
+                "age": age,
+                "injury_status": row.get("injury_status") or "Available",
+                "injury_notes": row.get("injury_notes") or ""
+            })
+            
+        gks = []
+        for p in processed_players:
+            name_lower = p["player_name"].lower()
+            if any(gk in name_lower for gk in gks_list):
+                gks.append(p)
+                
+        if not gks:
+            sorted_by_outfield = sorted(processed_players, key=lambda x: x["interceptions_p90"] + x["goals_p90"] + x["key_passes_p90"] + x["prog_carries_p90"])
+            gks.append(sorted_by_outfield[0])
+            
+        gk_names = {p["player_name"] for p in gks}
+        outfield_players = [p for p in processed_players if p["player_name"] not in gk_names]
+        
+        outfield_players.sort(key=lambda x: x["interceptions_p90"], reverse=True)
+        defs = outfield_players[:6]
+        def_names = {p["player_name"] for p in defs}
+        
+        remaining_outfield = [p for p in outfield_players if p["player_name"] not in def_names]
+        remaining_outfield.sort(key=lambda x: x["goals_p90"] + x["xg_p90"], reverse=True)
+        fwds = remaining_outfield[:5]
+        fwd_names = {p["player_name"] for p in fwds}
+        
+        for p in processed_players:
+            if p["player_name"] in gk_names:
+                p["position"] = "GK"
+            elif p["player_name"] in def_names:
+                p["position"] = "DEF"
+            elif p["player_name"] in fwd_names:
+                p["position"] = "FWD"
+            else:
+                p["position"] = "MID"
+                
+        squad = processed_players
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse squad file: {str(e)}")
         
@@ -960,13 +988,30 @@ async def get_squad_by_team(team_name: str):
     projected_xi.extend(fwds[:3])
     
     if len(projected_xi) < 11:
-        candidates = sorted(squad, key=lambda x: x["impact_score"], reverse=True)
-        for c in candidates:
-            if c not in projected_xi and len(projected_xi) < 11:
-                if c["position"] == "GK" and any(p["position"] == "GK" for p in projected_xi):
-                    continue
-                projected_xi.append(c)
-                
+        num_gk_needed = 1 - len([p for p in projected_xi if p["position"] == "GK"])
+        num_def_needed = 4 - len([p for p in projected_xi if p["position"] == "DEF"])
+        num_mid_needed = 3 - len([p for p in projected_xi if p["position"] == "MID"])
+        num_fwd_needed = 3 - len([p for p in projected_xi if p["position"] == "FWD"])
+        
+        remaining_squad = [p for p in squad if p not in projected_xi]
+        for p in remaining_squad:
+            if len(projected_xi) == 11:
+                break
+            p_copy = dict(p)
+            if num_gk_needed > 0:
+                p_copy["position"] = "GK"
+                num_gk_needed -= 1
+            elif num_def_needed > 0:
+                p_copy["position"] = "DEF"
+                num_def_needed -= 1
+            elif num_mid_needed > 0:
+                p_copy["position"] = "MID"
+                num_mid_needed -= 1
+            elif num_fwd_needed > 0:
+                p_copy["position"] = "FWD"
+                num_fwd_needed -= 1
+            projected_xi.append(p_copy)
+            
     return {
         "team": team_name,
         "squad": squad,

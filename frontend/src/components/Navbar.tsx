@@ -80,9 +80,9 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         
         {/* Logo and Brand */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-cyan-500 shadow-lg shadow-violet-500/20 group-hover:scale-105 transition-transform duration-300">
-            <Trophy className="h-5 w-5 text-white" />
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-cyan-500 shadow-lg shadow-violet-500/20 group-hover:scale-105 transition-transform duration-300 overflow-hidden p-1 bg-zinc-950/40">
+            <img src="/images/logos/tournai.png" alt="TournAI" className="h-full w-full object-contain filter brightness-110" />
             <div className="absolute inset-0 rounded-xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
           <div className="flex flex-col">

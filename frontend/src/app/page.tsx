@@ -20,21 +20,59 @@ import {
   X,
   RefreshCw
 } from "lucide-react";
-
+import PlayerImage from "../components/PlayerImage";
 
 const FLAG_MAP: Record<string, string> = {
-  "Morocco": "🇲🇦", "Portugal": "🇵🇹", "Argentina": "🇦🇷", "Brazil": "🇧🇷", "Spain": "🇪🇸", 
-  "France": "🇫🇷", "Germany": "🇩🇪", "England": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Netherlands": "🇳🇱", "Belgium": "🇧🇪",
-  "Uruguay": "🇺🇾", "Croatia": "🇭🇷", "Italy": "🇮🇹", "USA": "🇺🇸", "Mexico": "🇲🇽", 
-  "Canada": "🇨🇦", "Senegal": "🇸🇳", "Egypt": "🇪🇬", "Nigeria": "🇳🇬", "Cameroon": "🇨🇲", 
-  "Ghana": "🇬🇭", "Ivory Coast": "🇨🇮", "Algeria": "🇩🇿", "Tunisia": "🇹🇳", "South Africa": "🇿🇦",
-  "Japan": "🇯🇵", "South Korea": "🇰🇷", "Australia": "🇦🇺", "Saudi Arabia": "🇸🇦", "Iran": "🇮🇷",
-  "Colombia": "🇨🇴", "Ecuador": "🇪🇨", "Chile": "🇨🇱", "Peru": "🇵🇪", "Venezuela": "🇻🇪",
-  "Paraguay": "🇵🇾", "Bolivia": "🇧🇴", "Jamaica": "🇯🇲", "Costa Rica": "🇨🇷", "Panama": "🇵🇦",
-  "Honduras": "🇭🇳", "Switzerland": "🇨🇭", "Austria": "🇦🇹", "Denmark": "🇩🇰", "Sweden": "🇸🇪",
-  "Norway": "🇳🇴", "Poland": "🇵🇱", "Ukraine": "🇺🇦", "Turkey": "🇹🇷", "Scotland": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
-  "Wales": "🏴󠁧󠁢󠁷󠁬󠁳󠁿", "Czech Republic": "🇨🇿", "Hungary": "🇭🇺", "Slovakia": "🇸🇰", "Romania": "🇷🇴",
-  "Georgia": "🇬🇪", "Albania": "🇦🇱", "South Africa ": "🇿🇦", "DR Congo": "🇨🇩"
+  "Algeria": "/images/country-logos/ALG.png",
+  "Argentina": "/images/country-logos/ARG.png",
+  "Australia": "/images/country-logos/AUS.png",
+  "Austria": "/images/country-logos/AUT.png",
+  "Belgium": "/images/country-logos/BEL.png",
+  "Bosnia and Herzegovina": "/images/country-logos/BIH.png",
+  "Brazil": "/images/country-logos/BRA.png",
+  "Canada": "/images/country-logos/CAN.png",
+  "Cape Verde": "/images/country-logos/CPV.png",
+  "Colombia": "/images/country-logos/COL.png",
+  "Croatia": "/images/country-logos/CRO.png",
+  "Curaçao": "/images/country-logos/CUW.png",
+  "Curacao": "/images/country-logos/CUW.png",
+  "Czech Republic": "/images/country-logos/CZE.png",
+  "DR Congo": "/images/country-logos/COD.png",
+  "Ecuador": "/images/country-logos/ECU.png",
+  "Egypt": "/images/country-logos/EGY.png",
+  "England": "/images/country-logos/ENG.png",
+  "France": "/images/country-logos/FRA.png",
+  "Germany": "/images/country-logos/GER.png",
+  "Ghana": "/images/country-logos/GHA.png",
+  "Haiti": "/images/country-logos/HAI.png",
+  "Iran": "/images/country-logos/IRN.png",
+  "Iraq": "/images/country-logos/IRQ.png",
+  "Ivory Coast": "/images/country-logos/CIV.png",
+  "Japan": "/images/country-logos/JPN.png",
+  "Jordan": "/images/country-logos/JOR.png",
+  "Mexico": "/images/country-logos/MEX.png",
+  "Morocco": "/images/country-logos/MAR.png",
+  "Netherlands": "/images/country-logos/NED.png",
+  "New Zealand": "/images/country-logos/NZL.png",
+  "Norway": "/images/country-logos/NOR.png",
+  "Panama": "/images/country-logos/PAN.png",
+  "Paraguay": "/images/country-logos/PAR.png",
+  "Portugal": "/images/country-logos/POR.png",
+  "Qatar": "/images/country-logos/QAT.png",
+  "Saudi Arabia": "/images/country-logos/KSA.png",
+  "Scotland": "/images/country-logos/SCO.png",
+  "Senegal": "/images/country-logos/SEN.png",
+  "South Africa": "/images/country-logos/RSA.png",
+  "South Africa ": "/images/country-logos/RSA.png",
+  "South Korea": "/images/country-logos/KOR.png",
+  "Spain": "/images/country-logos/ESP.png",
+  "Sweden": "/images/country-logos/SWE.png",
+  "Switzerland": "/images/country-logos/SUI.png",
+  "Tunisia": "/images/country-logos/TUN.png",
+  "Turkey": "/images/country-logos/TUR.png",
+  "USA": "/images/country-logos/USA.png",
+  "Uruguay": "/images/country-logos/URU.png",
+  "Uzbekistan": "/images/country-logos/UZB.png"
 };
 
 interface LiveMatchData {
@@ -261,12 +299,15 @@ export default function HomePage() {
               </div>
               
               {/* Floating Tooltip */}
-              <div className="absolute bottom-13 left-1/2 -translate-x-1/2 w-48 bg-zinc-950/95 border border-cyan-500/30 p-3 rounded-2xl text-left shadow-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 backdrop-blur-md translate-y-2 group-hover:translate-y-0">
-                <div className="flex justify-between items-center border-b border-zinc-900 pb-1.5 mb-1.5">
+              <div className="absolute bottom-13 left-1/2 -translate-x-1/2 w-52 bg-zinc-950/95 border border-cyan-500/30 p-3 rounded-2xl text-left shadow-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 backdrop-blur-md translate-y-2 group-hover:translate-y-0">
+                <div className="flex justify-between items-center border-b border-zinc-900 pb-1.5 mb-2.5">
                   <span className="text-[9px] font-mono text-cyan-400 font-extrabold uppercase tracking-wider">{pos.label}</span>
                   <span className="text-[8px] font-mono text-zinc-500 bg-zinc-900 px-1.5 py-0.5 rounded">Squad Player</span>
                 </div>
-                <span className="text-xs font-bold text-white block truncate leading-tight">{pos.player.player_name}</span>
+                <div className="flex items-center gap-2 mb-2">
+                  <PlayerImage playerName={pos.player.player_name} className="h-8 w-8 shrink-0 border border-cyan-500/20" fallbackSize={14} />
+                  <span className="text-xs font-bold text-white block truncate leading-tight">{pos.player.player_name}</span>
+                </div>
                 <div className="flex justify-between items-center mt-2 pt-1.5 border-t border-zinc-900/50 text-[9px] text-zinc-400 font-mono">
                   <span>Age: {pos.player.age}</span>
                   <span className="text-glow-purple text-purple-400 font-extrabold">Impact: {pos.player.impact_score?.toFixed(1)}</span>
@@ -296,7 +337,14 @@ export default function HomePage() {
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-8 pb-20">
 
       {/* 0. FIFA WORLD CUP 2026 HERO BANNER */}
-      <section className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-gradient-to-br from-[#0d0a00] via-[#0c0c1a] to-[#04040e] p-6 sm:p-10 text-center shadow-[0_0_80px_rgba(245,158,11,0.07)] stadium-glow">
+      <section className="relative overflow-hidden rounded-3xl border border-amber-500/20 p-6 sm:p-10 text-center shadow-[0_0_80px_rgba(245,158,11,0.07)] stadium-glow">
+        {/* Background wallpaper image with overlay to keep text readable */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-15 pointer-events-none scale-105 transition-transform duration-700 hover:scale-100"
+          style={{ backgroundImage: "url('/images/wallpaper/fifa_wallapaper.jpg')" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0d0a00]/80 via-[#0c0c1a]/95 to-[#04040e] pointer-events-none" />
+        
         {/* Background stadium spotlight rings */}
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
         <div className="absolute -top-20 left-1/4 w-[300px] h-[300px] rounded-full bg-violet-500/5 blur-3xl pointer-events-none" />
@@ -312,7 +360,11 @@ export default function HomePage() {
 
           {/* Trophy + Title */}
           <div className="flex flex-col items-center gap-2">
-            <span className="text-6xl sm:text-7xl select-none animate-float filter drop-shadow-[0_0_30px_rgba(245,158,11,0.5)]">🏆</span>
+            <img 
+              src="/images/logos/WC26_Logo.png" 
+              alt="FIFA World Cup 2026 Logo" 
+              className="h-24 sm:h-28 object-contain select-none animate-float filter drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+            />
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-shimmer leading-none">
               World Cup 2026
             </h1>
@@ -382,8 +434,12 @@ export default function HomePage() {
             {/* Scoreboard display */}
             <div className="flex items-center justify-center gap-6 sm:gap-10 flex-1">
               <div className="flex flex-col items-center w-28 group">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-zinc-950/60 border border-zinc-800 shadow-inner group-hover:scale-105 group-hover:border-cyan-500/40 transition duration-300">
-                  <span className="text-4xl select-none filter drop-shadow-md">{FLAG_MAP[liveMatch.home_team] || "🏳️"}</span>
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-zinc-950/60 border border-zinc-800 shadow-inner group-hover:scale-105 group-hover:border-cyan-500/40 transition duration-300 overflow-hidden">
+                  {FLAG_MAP[liveMatch.home_team] ? (
+                    <img src={FLAG_MAP[liveMatch.home_team]} alt={liveMatch.home_team} className="h-10 w-12 object-contain filter drop-shadow-md" />
+                  ) : (
+                    <span className="text-4xl select-none">🏳️</span>
+                  )}
                 </div>
                 <span className="text-xs font-extrabold text-zinc-300 text-center truncate w-full mt-2.5 tracking-wide uppercase">{liveMatch.home_team}</span>
               </div>
@@ -395,8 +451,12 @@ export default function HomePage() {
               </div>
               
               <div className="flex flex-col items-center w-28 group">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-zinc-950/60 border border-zinc-800 shadow-inner group-hover:scale-105 group-hover:border-cyan-500/40 transition duration-300">
-                  <span className="text-4xl select-none filter drop-shadow-md">{FLAG_MAP[liveMatch.away_team] || "🏳️"}</span>
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-zinc-950/60 border border-zinc-800 shadow-inner group-hover:scale-105 group-hover:border-cyan-500/40 transition duration-300 overflow-hidden">
+                  {FLAG_MAP[liveMatch.away_team] ? (
+                    <img src={FLAG_MAP[liveMatch.away_team]} alt={liveMatch.away_team} className="h-10 w-12 object-contain filter drop-shadow-md" />
+                  ) : (
+                    <span className="text-4xl select-none">🏳️</span>
+                  )}
                 </div>
                 <span className="text-xs font-extrabold text-zinc-300 text-center truncate w-full mt-2.5 tracking-wide uppercase">{liveMatch.away_team}</span>
               </div>
@@ -516,14 +576,22 @@ export default function HomePage() {
                   <div className="space-y-1.5 my-2">
                     <div className="flex justify-between items-center text-xs font-semibold text-zinc-200">
                       <span className="flex items-center gap-1.5 truncate max-w-[130px]">
-                        <span className="text-sm">{FLAG_MAP[match.home_team] || "🏳️"}</span>
+                        {FLAG_MAP[match.home_team] ? (
+                          <img src={FLAG_MAP[match.home_team]} alt={match.home_team} className="h-4.5 w-6 object-contain rounded-sm shrink-0" />
+                        ) : (
+                          <span className="text-sm">🏳️</span>
+                        )}
                         <span className="truncate">{match.home_team}</span>
                       </span>
                       {isCompleted && <span className="font-mono text-white font-bold">{match.home_score}</span>}
                     </div>
                     <div className="flex justify-between items-center text-xs font-semibold text-zinc-200">
                       <span className="flex items-center gap-1.5 truncate max-w-[130px]">
-                        <span className="text-sm">{FLAG_MAP[match.away_team] || "🏳️"}</span>
+                        {FLAG_MAP[match.away_team] ? (
+                          <img src={FLAG_MAP[match.away_team]} alt={match.away_team} className="h-4.5 w-6 object-contain rounded-sm shrink-0" />
+                        ) : (
+                          <span className="text-sm">🏳️</span>
+                        )}
                         <span className="truncate">{match.away_team}</span>
                       </span>
                       {isCompleted && <span className="font-mono text-white font-bold">{match.away_score}</span>}
@@ -580,7 +648,11 @@ export default function HomePage() {
                         {topTwo.map((t) => (
                           <div key={t.Team} className="flex justify-between items-center text-xs text-zinc-300">
                             <span className="flex items-center gap-1.5 font-medium truncate max-w-[170px]">
-                              <span className="text-sm select-none">{FLAG_MAP[t.Team] || "🏳️"}</span>
+                              {FLAG_MAP[t.Team] ? (
+                                <img src={FLAG_MAP[t.Team]} alt={t.Team} className="h-4.5 w-6 object-contain rounded-sm shrink-0" />
+                              ) : (
+                                <span className="text-sm select-none">🏳️</span>
+                              )}
                               <span className="truncate">{t.Team}</span>
                             </span>
                             <span className="font-mono font-bold text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded">{t.Pts} Pts</span>
@@ -593,7 +665,11 @@ export default function HomePage() {
                           <div key={t.Team} className="flex justify-between items-center text-xs text-zinc-300 border-b border-zinc-900/50 pb-1.5 last:border-0 last:pb-0">
                             <span className="flex items-center gap-1.5 font-bold text-white truncate max-w-[150px]">
                               <span className="text-[10px] text-zinc-500 font-mono w-4">{t.Position}</span>
-                              <span className="text-sm select-none">{FLAG_MAP[t.Team] || "🏳️"}</span>
+                              {FLAG_MAP[t.Team] ? (
+                                <img src={FLAG_MAP[t.Team]} alt={t.Team} className="h-4.5 w-6 object-contain rounded-sm shrink-0" />
+                              ) : (
+                                <span className="text-sm select-none">🏳️</span>
+                              )}
                               <span className="truncate">{t.Team}</span>
                             </span>
                             <div className="flex gap-2 text-[10px] font-mono font-medium text-zinc-400">
@@ -621,13 +697,16 @@ export default function HomePage() {
                 const player = featuredPlayers[activePlayerIndex];
                 return (
                   <div className="mt-6 flex flex-col items-center text-center">
-                    <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-indigo-500 text-3xl select-none mb-4 shadow-lg shadow-purple-500/25">
-                      ⚽
-                    </div>
+                    <PlayerImage playerName={player.player_name} className="h-20 w-20 mb-4 shadow-lg shadow-purple-500/25 border-2 border-purple-500/40" fallbackSize={36} />
                     
                     <h4 className="text-xl font-extrabold text-white leading-none tracking-tight">{player.player_name}</h4>
-                    <span className="text-xs text-purple-400 font-mono mt-2 flex items-center gap-1">
-                      {FLAG_MAP[player.team] || "🏳️"} {player.team} Star
+                    <span className="text-xs text-purple-400 font-mono mt-2 flex items-center gap-2">
+                      {FLAG_MAP[player.team] ? (
+                        <img src={FLAG_MAP[player.team]} alt={player.team} className="h-4.5 w-6 object-contain rounded-sm inline-block align-middle" />
+                      ) : (
+                        <span>🏳️</span>
+                      )}
+                      <span>{player.team} Star</span>
                     </span>
 
                     {/* Circular Impact grade display */}
@@ -689,7 +768,11 @@ export default function HomePage() {
                 onClick={() => handleOpenTeamExplorer(teamName)}
                 className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-zinc-850 bg-[#0a0a14]/60 hover:bg-cyan-500/5 hover:border-cyan-500/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.1)] cursor-pointer select-none transition-all duration-300 group"
               >
-                <span className="text-xl filter drop-shadow-sm group-hover:scale-110 transition duration-300">{FLAG_MAP[teamName] || "🏳️"}</span>
+                {FLAG_MAP[teamName] ? (
+                  <img src={FLAG_MAP[teamName]} alt={teamName} className="h-5 w-6 object-contain rounded-sm group-hover:scale-110 transition duration-300 shrink-0" />
+                ) : (
+                  <span className="text-xl">🏳️</span>
+                )}
                 <div className="text-left">
                   <span className="text-xs font-bold text-zinc-300 block">{teamName}</span>
                   <span className="text-[8px] font-mono text-zinc-500 block">Group {TEAM_GROUP_MAP[teamName] || "-"}</span>
@@ -722,7 +805,11 @@ export default function HomePage() {
                 
                 {/* Header */}
                 <div className="flex items-center gap-3 pb-4 border-b border-zinc-900">
-                  <span className="text-4xl select-none">{FLAG_MAP[selectedExplorerTeam] || "🏳️"}</span>
+                  {FLAG_MAP[selectedExplorerTeam] ? (
+                    <img src={FLAG_MAP[selectedExplorerTeam]} alt={selectedExplorerTeam} className="h-10 w-12 object-contain rounded-md" />
+                  ) : (
+                    <span className="text-4xl select-none">🏳️</span>
+                  )}
                   <div>
                     <h3 className="text-2xl font-extrabold text-white leading-none tracking-tight">{selectedExplorerTeam} Squad Explorer</h3>
                     <span className="text-xs text-cyan-400 font-mono mt-1 block">ATLAS Projected Roster Profile</span>
@@ -736,10 +823,13 @@ export default function HomePage() {
                     <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase tracking-wider block">Full Squad Roster</span>
                     <div className="max-h-[360px] overflow-y-auto border border-zinc-800/80 rounded-2xl divide-y divide-zinc-900 bg-zinc-950/20">
                       {explorerSquad.map((player) => (
-                        <div key={player.player_name} className="flex justify-between items-center p-3 text-xs hover:bg-zinc-900/10 transition">
-                          <div>
-                            <span className="font-semibold text-white block">{player.player_name}</span>
-                            <span className="text-[10px] font-mono text-zinc-500 uppercase">{player.position} • {player.age} Years Old</span>
+                        <div key={player.player_name} className="flex justify-between items-center p-3 text-xs hover:bg-zinc-900/10 transition gap-3">
+                          <div className="flex items-center gap-2.5">
+                            <PlayerImage playerName={player.player_name} className="h-8 w-8 shrink-0" fallbackSize={14} />
+                            <div>
+                              <span className="font-semibold text-white block">{player.player_name}</span>
+                              <span className="text-[10px] font-mono text-zinc-500 uppercase">{player.position} • {player.age} Years Old</span>
+                            </div>
                           </div>
                           <div className="text-right">
                             <span className="font-mono font-bold text-glow-purple text-purple-400 block">{player.impact_score?.toFixed(1)}</span>
