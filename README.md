@@ -244,7 +244,8 @@ ATLAS tracks performance metrics to evaluate prediction strength over baseline a
 
 ## 🤝 Authors & Contributors
 
-*   **TournAI Dev Team** - Pair-programmed with AI assistant Antigravity (Google DeepMind).
-*   **ATLAS Architecture Research Group** - Sport analytics researchers.
+*   **AKiB** ([@HippomasAKiB1](https://github.com/HippomasAKiB1)) — Lead Developer & Architect.
+*   **Antigravity** (AI Assistant by Google DeepMind) — Pair Programmer.
+
 
 *Feel free to submit a pull request or open an issue to enhance the models or add UI features!*
