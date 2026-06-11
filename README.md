@@ -244,8 +244,8 @@ ATLAS tracks performance metrics to evaluate prediction strength over baseline a
 
 ## 🤝 Authors & Contributors
 
-*   **AKiB** ([@HippomasAKiB1](https://github.com/HippomasAKiB1)) — Lead Developer & Architect.
-*   **Antigravity** (AI Assistant by Google DeepMind) — Pair Programmer.
+*   **AKiB** ([@HippomasAKiB1](https://github.com/HippomasAKiB1)) — Lead ML Engineer, Developer & Architect.
+*   
 
 
 *Feel free to submit a pull request or open an issue to enhance the models or add UI features!*
