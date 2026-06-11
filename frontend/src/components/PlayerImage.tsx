@@ -45,11 +45,16 @@ export default function PlayerImage({ playerName, className = "", fallbackSize =
       try {
         // Standardize name for Wikipedia search query
         const cleanName = playerName.replace(/\b(GK|DEF|MID|FWD)\b/gi, "").trim();
-        const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(
+        
+        // 1. Try to search for the most relevant page using generator=search
+        // This solves matching issues for "Name (footballer)" like Alisson, Rodri, etc.
+        let url = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(
           cleanName
-        )}&prop=pageimages&format=json&pithumbsize=200&origin=*`;
+        )}&gsrlimit=1&prop=pageimages&format=json&pithumbsize=200&origin=*&redirects=1`;
 
-        const res = await fetch(url);
+        let res = await fetch(url);
+        let gotImage = false;
+        
         if (res.ok) {
           const data = await res.json();
           const pages = data.query?.pages;
@@ -60,6 +65,28 @@ export default function PlayerImage({ playerName, className = "", fallbackSize =
               playerImageCache[playerName] = sourceUrl;
               localStorage.setItem(cacheKey, sourceUrl);
               setImageUrl(sourceUrl);
+              gotImage = true;
+            }
+          }
+        }
+        
+        // 2. Fallback to exact title query if search failed or didn't return an image
+        if (!gotImage && active) {
+          url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(
+            cleanName
+          )}&prop=pageimages&format=json&pithumbsize=200&origin=*&redirects=1`;
+          res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            const pages = data.query?.pages;
+            if (pages) {
+              const pageInfo = Object.values(pages)[0] as any;
+              const sourceUrl = pageInfo.thumbnail?.source;
+              if (sourceUrl && active) {
+                playerImageCache[playerName] = sourceUrl;
+                localStorage.setItem(cacheKey, sourceUrl);
+                setImageUrl(sourceUrl);
+              }
             }
           }
         }

@@ -340,10 +340,10 @@ export default function HomePage() {
       <section className="relative overflow-hidden rounded-3xl border border-amber-500/20 p-6 sm:p-10 text-center shadow-[0_0_80px_rgba(245,158,11,0.07)] stadium-glow">
         {/* Background wallpaper image with overlay to keep text readable */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-15 pointer-events-none scale-105 transition-transform duration-700 hover:scale-100"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-35 pointer-events-none scale-105 transition-transform duration-700 hover:scale-100"
           style={{ backgroundImage: "url('/images/wallpaper/fifa_wallapaper.jpg')" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0d0a00]/80 via-[#0c0c1a]/95 to-[#04040e] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0d0a00]/50 via-[#0c0c1a]/70 to-[#04040e]/95 pointer-events-none" />
         
         {/* Background stadium spotlight rings */}
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
