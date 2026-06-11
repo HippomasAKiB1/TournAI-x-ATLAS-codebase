@@ -77,8 +77,15 @@ async def poll_football_data_loop():
             try:
                 synced_count = 0
                 for api_m in api_matches:
-                    home_name = api_m["homeTeam"]["name"]
-                    away_name = api_m["awayTeam"]["name"]
+                    home_team_obj = api_m.get("homeTeam")
+                    away_team_obj = api_m.get("awayTeam")
+                    if not home_team_obj or not away_team_obj:
+                        continue
+                    home_name = home_team_obj.get("name")
+                    away_name = away_team_obj.get("name")
+                    if not home_name or not away_name:
+                        continue
+                        
                     utc_date = api_m.get("utcDate")
                     api_id = api_m["id"]
                     
@@ -89,6 +96,8 @@ async def poll_football_data_loop():
                     
                     if not local_match:
                         def clean_team_name(name):
+                            if not name:
+                                return ""
                             name = name.lower()
                             if "united states" in name or "usa" in name:
                                 return "usa"
