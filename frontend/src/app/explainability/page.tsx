@@ -75,7 +75,7 @@ export default function ExplainabilityPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Global SHAP Feature Importance */}
-        <div className="lg:col-span-2 glass-card p-6 rounded-2xl">
+        <div className="lg:col-span-2 glass-card p-6 rounded-2xl min-w-0">
           <div className="mb-4">
             <h4 className="text-base font-bold text-white">Global SHAP Feature Importance</h4>
             <p className="text-xs text-zinc-400">Average impact of top features on outcome predictions.</p>
@@ -88,7 +88,7 @@ export default function ExplainabilityPage() {
                 margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
               >
                 <XAxis type="number" stroke="#71717a" fontSize={11} unit="%" />
-                <YAxis dataKey="name" type="category" stroke="#71717a" fontSize={10} width={130} />
+                <YAxis dataKey="name" type="category" stroke="#71717a" fontSize={10} width={100} />
                 <Tooltip
                   formatter={(value) => [`${Number(value).toFixed(2)}%`, "SHAP Importance"]}
                   contentStyle={{

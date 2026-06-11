@@ -437,33 +437,33 @@ export default function HomePage() {
             </div>
 
             {/* Scoreboard display */}
-            <div className="flex items-center justify-center gap-6 sm:gap-10 flex-1">
-              <div className="flex flex-col items-center w-28 group">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-zinc-950/60 border border-zinc-800 shadow-inner group-hover:scale-105 group-hover:border-cyan-500/40 transition duration-300 overflow-hidden">
+            <div className="flex items-center justify-center gap-3 sm:gap-6 md:gap-10 flex-1 w-full min-w-0">
+              <div className="flex flex-col items-center w-20 sm:w-28 group shrink-0">
+                <div className="relative flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-zinc-950/60 border border-zinc-800 shadow-inner group-hover:scale-105 group-hover:border-cyan-500/40 transition duration-300 overflow-hidden">
                   {FLAG_MAP[liveMatch.home_team] ? (
-                    <img src={FLAG_MAP[liveMatch.home_team]} alt={liveMatch.home_team} className="h-10 w-12 object-contain filter drop-shadow-md" />
+                    <img src={FLAG_MAP[liveMatch.home_team]} alt={liveMatch.home_team} className="h-8 w-10 sm:h-10 sm:w-12 object-contain filter drop-shadow-md" />
                   ) : (
-                    <span className="text-4xl select-none">🏳️</span>
+                    <span className="text-2xl sm:text-4xl select-none">🏳️</span>
                   )}
                 </div>
-                <span className="text-xs font-extrabold text-zinc-300 text-center truncate w-full mt-2.5 tracking-wide uppercase">{liveMatch.home_team}</span>
+                <span className="text-[10px] sm:text-xs font-extrabold text-zinc-300 text-center truncate w-full mt-2.5 tracking-wide uppercase">{liveMatch.home_team}</span>
               </div>
               
-              <div className="text-4xl sm:text-5xl font-black font-mono text-white flex items-center gap-4 text-glow-purple">
+              <div className="text-3xl sm:text-4xl md:text-5xl font-black font-mono text-white flex items-center gap-2 sm:gap-4 text-glow-purple shrink-0">
                 <span>{liveMatch.home_score}</span>
                 <span className="text-cyan-500 font-black animate-pulse">:</span>
                 <span>{liveMatch.away_score}</span>
               </div>
               
-              <div className="flex flex-col items-center w-28 group">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-zinc-950/60 border border-zinc-800 shadow-inner group-hover:scale-105 group-hover:border-cyan-500/40 transition duration-300 overflow-hidden">
+              <div className="flex flex-col items-center w-20 sm:w-28 group shrink-0">
+                <div className="relative flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-zinc-950/60 border border-zinc-800 shadow-inner group-hover:scale-105 group-hover:border-cyan-500/40 transition duration-300 overflow-hidden">
                   {FLAG_MAP[liveMatch.away_team] ? (
-                    <img src={FLAG_MAP[liveMatch.away_team]} alt={liveMatch.away_team} className="h-10 w-12 object-contain filter drop-shadow-md" />
+                    <img src={FLAG_MAP[liveMatch.away_team]} alt={liveMatch.away_team} className="h-8 w-10 sm:h-10 sm:w-12 object-contain filter drop-shadow-md" />
                   ) : (
-                    <span className="text-4xl select-none">🏳️</span>
+                    <span className="text-2xl sm:text-4xl select-none">🏳️</span>
                   )}
                 </div>
-                <span className="text-xs font-extrabold text-zinc-300 text-center truncate w-full mt-2.5 tracking-wide uppercase">{liveMatch.away_team}</span>
+                <span className="text-[10px] sm:text-xs font-extrabold text-zinc-300 text-center truncate w-full mt-2.5 tracking-wide uppercase">{liveMatch.away_team}</span>
               </div>
             </div>
 
@@ -791,7 +791,7 @@ export default function HomePage() {
       {/* 6. TEAM EXPLORER SQUAD DRAWER MODAL OVERLAY */}
       {selectedExplorerTeam && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#030308]/85 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="relative w-full max-w-4xl max-h-[85vh] overflow-y-auto glass-card rounded-3xl border border-white/10 bg-[#07070d] p-6 shadow-2xl flex flex-col justify-between">
+          <div className="relative w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto glass-card rounded-3xl border border-white/10 bg-[#07070d] p-4 sm:p-6 shadow-2xl flex flex-col justify-between">
             
             <button 
               onClick={() => { setSelectedExplorerTeam(null); setExplorerSquad([]); setExplorerStartingXI([]); }}

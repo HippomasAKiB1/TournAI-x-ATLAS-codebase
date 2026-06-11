@@ -286,11 +286,11 @@ export default function InjuryLabPage() {
               <div className="overflow-x-auto mt-4">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="border-b border-zinc-800 text-zinc-400 uppercase font-mono tracking-wider">
-                      <th className="py-3 px-4">Stage Round</th>
-                      <th className="py-3 px-4 text-center">With {whatIfResult.player_name.split(" ")[0]}</th>
-                      <th className="py-3 px-4 text-center text-rose-400">Without {whatIfResult.player_name.split(" ")[0]}</th>
-                      <th className="py-3 px-4 text-center">Probability Drop</th>
+                    <tr className="border-b border-zinc-800 text-zinc-400 uppercase font-mono tracking-wider text-[10px]">
+                      <th className="py-2.5 px-2 sm:py-3 sm:px-4">Stage Round</th>
+                      <th className="py-2.5 px-2 sm:py-3 sm:px-4 text-center">With {whatIfResult.player_name.split(" ")[0]}</th>
+                      <th className="py-2.5 px-2 sm:py-3 sm:px-4 text-center text-rose-400">Without {whatIfResult.player_name.split(" ")[0]}</th>
+                      <th className="py-2.5 px-2 sm:py-3 sm:px-4 text-center">Drop</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-900 text-zinc-300 font-mono">
@@ -304,10 +304,10 @@ export default function InjuryLabPage() {
                       const diff = (row.before - row.after).toFixed(1);
                       return (
                         <tr key={idx} className="hover:bg-zinc-900/10 transition">
-                          <td className="py-3.5 px-4 font-semibold text-white font-sans text-xs">{row.round}</td>
-                          <td className="py-3.5 px-4 text-center font-bold">{row.before.toFixed(1)}%</td>
-                          <td className="py-3.5 px-4 text-center font-bold text-rose-400">{row.after.toFixed(1)}%</td>
-                          <td className="py-3.5 px-4 text-center text-rose-500 font-extrabold">-{diff}%</td>
+                          <td className="py-2.5 px-2 sm:py-3.5 sm:px-4 font-semibold text-white font-sans text-xs">{row.round}</td>
+                          <td className="py-2.5 px-2 sm:py-3.5 sm:px-4 text-center font-bold">{row.before.toFixed(1)}%</td>
+                          <td className="py-2.5 px-2 sm:py-3.5 sm:px-4 text-center font-bold text-rose-400">{row.after.toFixed(1)}%</td>
+                          <td className="py-2.5 px-2 sm:py-3.5 sm:px-4 text-center text-rose-500 font-extrabold">-{diff}%</td>
                         </tr>
                       );
                     })}
@@ -401,7 +401,7 @@ export default function InjuryLabPage() {
 
       {/* Progression Deltas Chart */}
       {whatIfResult && (
-        <div className="glass-card p-6 rounded-2xl">
+        <div className="glass-card p-6 rounded-2xl min-w-0">
           <span className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-wider block mb-4">Progression delta chart</span>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">

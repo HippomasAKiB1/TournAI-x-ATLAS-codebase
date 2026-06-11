@@ -134,7 +134,7 @@ export default function Navbar() {
                 </>
               )}
             </span>
-            <span className="text-[11px] font-mono text-gray-300 font-medium select-none uppercase">
+            <span className="hidden sm:inline text-[11px] font-mono text-gray-300 font-medium select-none uppercase">
               {pipelineStatus?.status === "running" ? "Updating" : "Live"}
             </span>
             {pipelineStatus?.status === "running" && (

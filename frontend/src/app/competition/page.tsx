@@ -15,7 +15,9 @@ import {
   AlertCircle,
   HelpCircle,
   Clock,
-  ChevronRight
+  ChevronRight,
+  Menu,
+  X
 } from "lucide-react";
 
 interface DBModelMatch {
@@ -63,6 +65,7 @@ export default function CompetitionPage() {
   const [predictInputs, setPredictInputs] = useState<Record<number, { home: string; away: string }>>({});
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const API_BASE = getApiBaseUrl();
 
@@ -222,7 +225,7 @@ export default function CompetitionPage() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-[#030308] cyber-grid">
       {/* Sidebar Layout */}
-      <aside className="w-full lg:w-72 bg-zinc-950/80 border-b lg:border-b-0 lg:border-r border-zinc-800/80 backdrop-blur-xl flex flex-col z-10">
+      <aside className="w-full lg:w-72 bg-zinc-950/80 border-b lg:border-b-0 lg:border-r border-zinc-800/80 backdrop-blur-xl flex flex-col z-10 shrink-0">
         <div className="p-6 border-b border-zinc-800/80 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-400 flex items-center justify-center font-bold text-white shadow-lg shadow-purple-500/20">
@@ -237,21 +240,28 @@ export default function CompetitionPage() {
               </span>
             </div>
           </div>
+          {/* Hamburger toggle button on mobile */}
+          <button 
+            onClick={() => setIsMobileOpen(!isMobileOpen)}
+            className="lg:hidden p-2 text-zinc-400 hover:text-white hover:bg-zinc-900 rounded-xl border border-zinc-800 transition cursor-pointer"
+          >
+            {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
 
         {/* Sidebar Nav */}
-        <nav className="flex-1 p-4 space-y-1.5">
+        <nav className={`${isMobileOpen ? "block" : "hidden"} lg:block flex-1 p-4 space-y-1.5`}>
           <button
             onClick={() => router.push("/")}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 border border-transparent transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 border border-transparent transition-all cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Live Dashboard
           </button>
           
           <button
-            onClick={() => setActiveSubTab('predict')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+            onClick={() => { setActiveSubTab('predict'); setIsMobileOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all cursor-pointer ${
               activeSubTab === 'predict'
                 ? "bg-gradient-to-r from-purple-900/40 to-cyan-900/40 text-cyan-300 border border-cyan-500/30 text-glow-cyan"
                 : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 border border-transparent"
@@ -262,8 +272,8 @@ export default function CompetitionPage() {
           </button>
 
           <button
-            onClick={() => setActiveSubTab('leaderboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+            onClick={() => { setActiveSubTab('leaderboard'); setIsMobileOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all cursor-pointer ${
               activeSubTab === 'leaderboard'
                 ? "bg-gradient-to-r from-purple-900/40 to-cyan-900/40 text-cyan-300 border border-cyan-500/30 text-glow-cyan"
                 : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 border border-transparent"
@@ -275,7 +285,7 @@ export default function CompetitionPage() {
         </nav>
 
         {/* User profile section */}
-        <div className="p-5 border-t border-zinc-800/80 bg-zinc-950/40 flex flex-col gap-3">
+        <div className={`${isMobileOpen ? "flex" : "hidden"} lg:flex p-5 border-t border-zinc-800/80 bg-zinc-950/40 flex-col gap-3`}>
           <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800">
             <div className="w-8 h-8 rounded-full bg-cyan-900/50 border border-cyan-500/30 flex items-center justify-center font-bold text-cyan-400 uppercase">
               {currentUser ? currentUser.substring(0, 2) : "FN"}
@@ -287,7 +297,7 @@ export default function CompetitionPage() {
           </div>
           <button
             onClick={handleLogout}
-            className="w-full py-2.5 rounded-xl border border-zinc-800 hover:border-rose-900/50 hover:bg-rose-950/15 text-zinc-400 hover:text-rose-400 text-xs font-medium transition-all flex items-center justify-center gap-2"
+            className="w-full py-2.5 rounded-xl border border-zinc-800 hover:border-rose-900/50 hover:bg-rose-950/15 text-zinc-400 hover:text-rose-400 text-xs font-medium transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             Sign Out

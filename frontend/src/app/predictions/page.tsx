@@ -442,7 +442,7 @@ export default function PredictionsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* H2H Prediction Odds Card */}
-        <div className="lg:col-span-2 glass-card p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden">
+        <div className="lg:col-span-2 glass-card p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden min-w-0">
           
           {/* Upset Alert Badge */}
           {showUpsetAlert && (
@@ -453,19 +453,19 @@ export default function PredictionsPage() {
 
           <div>
             <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider">ATLAS Prediction Odds</span>
-            <div className="flex items-center justify-between mt-4 mb-6">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 mt-4 mb-6 text-center sm:text-left">
+              <div className="flex items-center gap-2.5 sm:gap-3">
                 {FLAG_MAP[homeTeam] && (
-                  <img src={FLAG_MAP[homeTeam]} alt={homeTeam} className="h-8 w-10 object-contain rounded-md shrink-0" />
+                  <img src={FLAG_MAP[homeTeam]} alt={homeTeam} className="h-6 w-8 sm:h-8 sm:w-10 object-contain rounded-md shrink-0" />
                 )}
-                <span className="text-3xl font-extrabold text-white">{homeTeam}</span>
+                <span className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white">{homeTeam}</span>
               </div>
-              <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest px-2 py-1 bg-zinc-950 rounded">VS</span>
-              <div className="flex items-center gap-3">
+              <span className="text-[10px] sm:text-xs font-mono text-zinc-500 uppercase tracking-widest px-2 py-1 bg-zinc-950 rounded shrink-0">VS</span>
+              <div className="flex items-center gap-2.5 sm:gap-3">
                 {FLAG_MAP[awayTeam] && (
-                  <img src={FLAG_MAP[awayTeam]} alt={awayTeam} className="h-8 w-10 object-contain rounded-md shrink-0" />
+                  <img src={FLAG_MAP[awayTeam]} alt={awayTeam} className="h-6 w-8 sm:h-8 sm:w-10 object-contain rounded-md shrink-0" />
                 )}
-                <span className="text-3xl font-extrabold text-white">{awayTeam}</span>
+                <span className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white">{awayTeam}</span>
               </div>
             </div>
 
@@ -508,7 +508,7 @@ export default function PredictionsPage() {
         </div>
 
         {/* Squad Radar Stats Comparison Card */}
-        <div className="glass-card p-6 rounded-2xl">
+        <div className="glass-card p-6 rounded-2xl min-w-0">
           <span className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-wider">Squad Strength Analysis</span>
           <div className="h-64 w-full mt-4 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
