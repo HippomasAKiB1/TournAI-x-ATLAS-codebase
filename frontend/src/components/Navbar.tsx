@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTournament } from "../context/TournamentContext";
+import { getApiBaseUrl } from "../lib/config";
 import { 
   Trophy, 
   User, 
@@ -45,7 +46,7 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = async () => {
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+    const API_BASE = getApiBaseUrl();
     try {
       await fetch(`${API_BASE}/auth/logout`, {
         method: "POST",

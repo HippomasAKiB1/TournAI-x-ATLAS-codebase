@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getApiBaseUrl } from "../../lib/config";
 import { Mail, Lock, User, Sparkles, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 
 export default function AuthPage() {
@@ -58,7 +59,7 @@ export default function AuthPage() {
     if (!validateForm()) return;
 
     setLoading(true);
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+    const API_BASE = getApiBaseUrl();
 
     try {
       if (isLogin) {

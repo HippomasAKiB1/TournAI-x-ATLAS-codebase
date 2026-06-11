@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTournament } from "../context/TournamentContext";
 import { resetDatabase } from "../lib/api";
+import { getApiBaseUrl } from "../lib/config";
 import { 
   Trophy, 
   Activity, 
@@ -130,7 +131,7 @@ export default function HomePage() {
   const [explorerStartingXI, setExplorerStartingXI] = useState<any[]>([]);
   const [explorerLoading, setExplorerLoading] = useState(false);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+  const API_BASE = getApiBaseUrl();
 
   const handleResetSandbox = async () => {
     const confirmReset = window.confirm("Are you sure you want to reset the sandbox database back to pre-tournament baseline? This will clear all ingested match scores.");

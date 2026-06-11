@@ -7,8 +7,9 @@ import {
   GroupStandingsResponse,
   InjuryScenario
 } from '../types';
+import { getApiBaseUrl } from './config';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = getApiBaseUrl();
 
 async function fetchWithFallback<T>(apiPath: string, staticPath: string): Promise<T> {
   try {

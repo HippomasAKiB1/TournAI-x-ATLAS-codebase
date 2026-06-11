@@ -17,6 +17,7 @@ import {
   getPipelineStatus,
   getBracketProbabilities
 } from "../lib/api";
+import { getApiBaseUrl } from "../lib/config";
 
 interface TournamentContextType {
   loading: boolean;
@@ -90,7 +91,7 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
     loadData();
 
     // Setup SSE connection
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+    const API_BASE = getApiBaseUrl();
     const sseUrl = `${API_BASE}/sse/pipeline`;
     let eventSource: EventSource | null = null;
 

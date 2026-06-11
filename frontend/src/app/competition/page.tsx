@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getApiBaseUrl } from "../../lib/config";
 import { 
   Trophy, 
   User, 
@@ -63,7 +64,7 @@ export default function CompetitionPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+  const API_BASE = getApiBaseUrl();
 
   // Check auth and load data
   useEffect(() => {
